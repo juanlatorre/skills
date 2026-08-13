@@ -1,6 +1,6 @@
 <div align="center">
 
-# Juan Latorre's Agent Skills
+# Agent Skills
 
 Reusable workflows for AI-driven software development.
 
