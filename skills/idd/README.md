@@ -365,7 +365,6 @@ skills/
     │   ├── LARGE_WORK.md
     │   ├── IMPLEMENTATION.md
     │   └── REVIEW.md
-    ├── scripts/
     └── licenses/
 ```
 
@@ -373,7 +372,7 @@ skills/
 
 Agent skills can instruct coding agents to read files, edit repositories, and execute shell commands.
 
-Review `SKILL.md`, bundled references, and scripts before installing IDD. Run implementation and review modes only inside trusted projects.
+Review `SKILL.md`, bundled references before installing IDD. Run implementation and review modes only inside trusted projects.
 
 IDD never commits, pushes, opens pull requests, deploys, or changes remote state unless the user explicitly requests it.
 

@@ -88,7 +88,6 @@ skills/
     ├── SKILL.md
     ├── README.md
     ├── references/
-    ├── scripts/
     ├── licenses/
     └── THIRD_PARTY_NOTICES.md
 ```
