@@ -6,7 +6,7 @@ compatibility: Requires an Agent Skills-compatible coding agent with repository 
 disable-model-invocation: true
 metadata:
   author: juanlatorre
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # IDD — Inshallah Driven Development
@@ -393,6 +393,7 @@ Use for work classified as `LARGE` after a parent spec exists.
 
 Return the created paths, dependency order, blockers, and the next native invocation for the first ready child spec.
 
+
 ## Mode: `implement`
 
 Use only in a fresh session that did not perform the grilling or write the spec.
@@ -417,7 +418,7 @@ Then:
    - relevant `CONTEXT.md` and context maps;
    - linked ADRs;
    - relevant code, schemas, migrations, and tests.
-3. Confirm that the spec is `READY`.
+3. Confirm that the spec is `READY`, or that it is returning from a prior `CHANGES REQUIRED` review.
 4. Check for contradictions between:
    - the spec;
    - repository architecture;
@@ -425,22 +426,17 @@ Then:
    - accepted ADRs;
    - existing public contracts.
 5. If a material contradiction or product ambiguity exists, stop and report it. Do not guess through it.
-6. Produce a brief implementation plan tied to acceptance criteria.
-7. Implement the complete approved scope in small, coherent slices.
-8. Reuse existing patterns and abstractions before introducing new ones.
-9. Add or update meaningful tests.
-10. Run the strongest available verification appropriate to the repository, such as:
-    - focused tests;
-    - broader relevant tests;
-    - lint;
-    - type checking;
-    - build;
-    - migrations or schema validation;
-    - repository-specific checks.
-11. Do not claim unavailable checks passed.
-12. Do not silently rewrite the product contract to fit the implementation.
-13. Update only the spec's status and verification section when the repository's spec format supports it and the evidence justifies the change.
-14. Never commit, push, open a pull request, or deploy unless explicitly requested.
+6. If this is a corrective implementation after review, read the evidenced findings and address them without reopening approved product decisions.
+7. Produce a brief implementation plan tied to acceptance criteria.
+8. Implement the complete approved scope in small, coherent slices.
+9. Reuse existing patterns and abstractions before introducing new ones.
+10. Add or update meaningful tests.
+11. Run the strongest available verification appropriate to the repository, such as focused tests, broader relevant tests, lint, type checking, build, migrations or schema validation, and repository-specific checks.
+12. Do not claim unavailable checks passed.
+13. Do not silently rewrite the product contract to fit the implementation.
+14. Never mark the work `DONE` before an independent `review` returns `APPROVE`.
+15. If the repository spec format supports implementation status, use `IMPLEMENTED` or `READY_FOR_REVIEW`. Otherwise leave the approved status unchanged and record that independent review is pending.
+16. Never commit, push, open a pull request, or deploy unless explicitly requested.
 
 Return:
 
@@ -449,7 +445,8 @@ Return:
 - checks actually run and their results;
 - acceptance-criteria matrix;
 - residual risks or unverified items;
-- whether independent review is ready.
+- current IDD workflow status;
+- parent progress when the target is a child spec.
 
 The acceptance matrix must use:
 
@@ -460,7 +457,74 @@ NOT VERIFIED insufficient evidence or unavailable verification
 BLOCKED      cannot proceed because of a material dependency or decision
 ```
 
-End with the native invocation for `idd review <spec-path>` and state that it must run in another fresh session, preferably with a different model.
+### Implementation lifecycle
+
+Use these logical workflow states:
+
+```text
+READY
+→ approved spec, not yet implemented
+
+IMPLEMENTED
+→ implementation and local verification complete
+→ independent review still required
+
+CHANGES REQUIRED
+→ independent review found defects
+→ corrective implementation and another review are required
+
+DONE
+→ independent review returned APPROVE
+```
+
+A successful implementation run ends at `IMPLEMENTED`, never `DONE`.
+
+Every implementation must end with:
+
+```text
+## IDD status
+
+Spec:
+<spec path>
+
+Implementation:
+IMPLEMENTED
+
+Verification:
+<PASS | PARTIAL | BLOCKED>
+
+Independent review:
+PENDING
+
+Parent:
+<parent spec path | none>
+
+Parent workflow:
+<IN PROGRESS | none>
+
+## Next step
+
+<native invocation for idd review <spec-path>>
+```
+
+State that review must run in another fresh session, preferably with a different model.
+
+When implementing a child spec, also inspect the parent spec and dependency index. Report, when determinable:
+
+- siblings already complete;
+- siblings ready or blocked;
+- dependencies that would be unlocked by this child receiving `APPROVE`;
+- siblings that may safely proceed in parallel after approval;
+- the condition that eventually triggers the integrated parent review.
+
+Do not automatically start another child.
+
+A large parent workflow is complete only when every required child has received `APPROVE`, all integration dependencies are satisfied, and the integrated parent review returns `APPROVE`. Until then:
+
+```text
+Parent workflow: IN PROGRESS
+```
+
 
 ## Mode: `review`
 
@@ -491,7 +555,7 @@ If the current session implemented the change, state that review independence is
 7. Do not treat technically clean code as compliant when it violates the spec.
 8. Do not treat spec compliance as sufficient when the implementation is unsafe or incompatible.
 9. Run safe verification commands when useful.
-10. Do not modify code, specs, or repository state.
+10. Review is read-only. Do not modify code, tests, specs, domain documentation, ADRs, or repository state.
 11. Report only evidenced findings.
 12. Every finding must include:
     - severity;
@@ -515,33 +579,70 @@ If the current session implemented the change, state that review independence is
     - acceptance matrix;
     - checks run and results;
     - residual uncertainty;
-    - final verdict.
+    - current IDD workflow status;
+    - final verdict;
+    - explicit next step.
 
-````md
 Allowed verdicts:
 
 ```text
 APPROVE
 CHANGES REQUIRED
 CANNOT VERIFY
-````
+```
 
 Use `APPROVE` only when no blocking or important issue remains and the acceptance criteria have sufficient evidence.
 
-## Post-review routing
+### Review immutability
 
-A review is the final verification gate, but its verdict determines whether the IDD cycle is complete.
+During `review`, never:
 
-### `APPROVE`
+- modify implementation code or tests;
+- rewrite, clarify, or repair the spec;
+- resolve open product questions;
+- update `CONTEXT.md` or context maps;
+- create or edit ADRs;
+- apply fixes;
+- change repository state.
 
-The IDD workflow is complete.
+A reviewer reports findings and evidence. It does not repair them.
 
-Do not invoke another IDD mode automatically.
+If a finding requires a code change, return `CHANGES REQUIRED`.
+
+If a finding requires a product or specification decision, return `CANNOT VERIFY`.
+
+If the approved spec itself is contradictory, materially incomplete, or no longer represents the intended behavior, return `CANNOT VERIFY` and require a separate definition/specification session. Do not repair the spec during review.
+
+### Post-review routing
+
+#### Standalone `APPROVE`
+
+If the reviewed spec has no parent, it is logically `DONE` and the IDD workflow is complete.
 
 Return:
 
 ```text
-Verdict: APPROVE
+## Verdict
+
+APPROVE
+
+<brief reason>
+
+## IDD status
+
+Spec:
+<spec path>
+
+Implementation:
+VERIFIED
+
+Independent review:
+APPROVE
+
+Spec status:
+DONE
+
+## Next step
 
 IDD workflow complete.
 
@@ -552,87 +653,240 @@ merge, release, or deployment remain outside IDD and require
 explicit user instruction.
 ```
 
-### `CHANGES REQUIRED`
+Do not invoke another IDD mode automatically.
 
-The IDD workflow is not complete.
+#### `CHANGES REQUIRED`
 
-Return the current host's native invocation for:
+The reviewed spec is not complete.
+
+Return:
 
 ```text
+## Verdict
+
+CHANGES REQUIRED
+
+<brief reason>
+
+## IDD status
+
+Spec:
+<spec path>
+
+Implementation:
+CHANGES REQUIRED
+
+Independent review:
+FAILED
+
+Parent:
+<parent spec path | none>
+
+Parent workflow:
+<IN PROGRESS | none>
+
+## Next step
+
+Fresh implementation session:
+
 idd implement <spec-path>
-```
 
-State that the corrections must run in a fresh implementation session.
+After the corrections, fresh independent review:
 
-The implementation session must:
-
-1. read the approved spec;
-2. read the current repository state;
-3. address the evidenced review findings;
-4. preserve already-satisfied acceptance criteria;
-5. run the relevant verification again.
-
-After the corrections, the implementation must pass through another independent review.
-
-Return the current host's native invocation for:
-
-```text
 idd review <spec-path>
 ```
 
-Do not fix the findings during the review session itself.
+Render the invocations using the current host's native syntax.
 
-### `CANNOT VERIFY`
+Do not advance a parent dependency graph as though the spec were complete.
 
-The IDD workflow is not complete.
+#### `CANNOT VERIFY`
 
-State exactly:
+State exactly what could not be verified, why, what evidence/environment/access/decision is missing, and whether the uncertainty concerns the implementation or the approved spec.
 
-* what could not be verified;
-* why it could not be verified;
-* what evidence, environment, access, or decision is missing;
-* whether the uncertainty concerns the implementation or the approved spec.
+If only verification evidence is missing, return:
+
+```text
+## Verdict
+
+CANNOT VERIFY
+
+<brief reason>
+
+## IDD status
+
+Spec:
+<spec path>
+
+Independent review:
+NOT VERIFIED
+
+Parent:
+<parent spec path | none>
+
+Parent workflow:
+<IN PROGRESS | none>
+
+## Next step
+
+Obtain the missing evidence or environment, then run:
+
+idd review <spec-path>
+```
+
+Render the invocation using the current host's native syntax.
 
 Do not send the user back to implementation unless the missing evidence reveals or strongly indicates an implementation defect.
 
-If only verification evidence is missing, return the current host's native invocation for:
+### Large-work review routing
+
+When the reviewed spec is a child of a parent spec, inspect the parent spec, child index, dependency declarations, and available repository evidence.
+
+Determine, when possible, which child specs are:
 
 ```text
-idd review <spec-path>
+DONE
+IMPLEMENTED
+READY
+BLOCKED
+CHANGES REQUIRED
 ```
 
-to be run again once the required evidence or environment is available.
+Mark a status `UNKNOWN` rather than guessing when evidence is insufficient.
 
-If the approved spec itself is contradictory, materially incomplete, or no longer represents the intended behavior:
+Do not automatically implement another child.
 
-1. return `CANNOT VERIFY`;
-2. identify the blocking specification problem;
-3. do not edit the spec during review;
-4. instruct the user to correct or re-specify the affected behavior in a separate session;
-5. require another independent review after the corrected spec and implementation are aligned.
+#### Child `APPROVE`
 
-## Review immutability
+When a child review returns `APPROVE`, that child is logically `DONE`.
 
-Review is read-only.
+Return:
 
-During `review`, never:
+```text
+## Verdict
 
-* modify implementation code;
-* modify tests;
-* rewrite or clarify the spec;
-* resolve open product questions;
-* update `CONTEXT.md`;
-* create or edit ADRs;
-* apply fixes;
-* change repository state.
+APPROVE
 
-A reviewer reports findings and evidence. It does not repair them.
+<brief reason>
 
-If a finding requires a code change, return `CHANGES REQUIRED`.
+## IDD status
 
-If a finding requires a product or specification decision, return `CANNOT VERIFY`.
+Child:
+<child spec path>
 
-## Review completion contract
+Implementation:
+VERIFIED
+
+Independent review:
+APPROVE
+
+Child status:
+DONE
+
+Parent:
+<parent spec path>
+
+Parent workflow:
+IN PROGRESS
+
+## Parent progress
+
+<brief list or table of child states>
+
+## Next step
+
+<next valid child or children, or final parent review if all required children are complete>
+```
+
+Also report:
+
+- siblings already `DONE`;
+- currently `READY` siblings;
+- siblings newly unblocked by this approval;
+- work that may safely proceed in parallel;
+- what remains before the final parent review.
+
+If exactly one child is the natural next dependency, return its native `idd implement <next-child-spec>` invocation.
+
+If multiple children are independently ready, list each valid invocation instead of choosing one arbitrarily.
+
+If no child is ready, state the blocker explicitly.
+
+#### Child `CHANGES REQUIRED`
+
+Do not mark the child `DONE` or unlock dependencies that require it.
+
+Return the native invocations for:
+
+```text
+idd implement <same-child-spec>
+```
+
+and, after corrections in another fresh session:
+
+```text
+idd review <same-child-spec>
+```
+
+#### Child `CANNOT VERIFY`
+
+Report:
+
+```text
+Child status: NOT VERIFIED
+Parent workflow: IN PROGRESS
+```
+
+Do not unlock dependencies that require this child. State what must be resolved before review can run again.
+
+#### Final parent review
+
+Recommend the integrated parent review only when:
+
+1. every required child is logically `DONE`;
+2. all parent-level integration dependencies are satisfied;
+3. no blocking parent question remains unresolved.
+
+The final native invocation is:
+
+```text
+idd review <parent-spec>
+```
+
+The parent review must evaluate the complete integrated implementation against the parent spec, not merely aggregate child verdicts.
+
+When that integrated review returns `APPROVE`, return:
+
+```text
+## Verdict
+
+APPROVE
+
+<brief reason>
+
+## IDD status
+
+Parent:
+<parent spec path>
+
+Parent status:
+DONE
+
+Integrated review:
+APPROVE
+
+## Next step
+
+IDD workflow complete.
+
+No further IDD phase is required.
+```
+
+If the integrated parent review returns `CHANGES REQUIRED`, identify the smallest affected child or integration slice and route corrections there. Do not reopen unrelated completed children.
+
+If it returns `CANNOT VERIFY`, state the missing parent-level evidence or environment and require another integrated review once available.
+
+### Review completion contract
 
 Every review must end with exactly one explicit verdict:
 
@@ -642,19 +896,17 @@ CHANGES REQUIRED
 CANNOT VERIFY
 ```
 
-Never end a review with ambiguous language such as:
+Never end a review only with ambiguous language such as:
 
 ```text
 review completed
-looks good overall
 review closed
+looks good overall
 mostly correct
 no major concerns
 ```
 
-without also emitting one of the allowed verdicts.
-
-The final section of every review must follow this structure:
+The final sections of every review must be:
 
 ```text
 ## Verdict
@@ -663,28 +915,41 @@ The final section of every review must follow this structure:
 
 <brief reason>
 
+## IDD status
+
+<current standalone spec, child, or parent state>
+
 ## Next step
 
 <explicit next action>
 ```
 
-Routing rules:
+Routing summary:
 
 ```text
-APPROVE
+APPROVE on standalone spec
+→ spec DONE
 → IDD complete
-→ no further IDD invocation
+
+APPROVE on child spec
+→ child DONE
+→ inspect parent dependency graph
+→ continue with READY children
 
 CHANGES REQUIRED
-→ fresh implementation session
-→ idd implement <spec-path>
-→ fresh independent review session
-→ idd review <spec-path>
+→ fresh corrective implementation
+→ idd implement <same-spec>
+→ fresh independent review
+→ idd review <same-spec>
 
 CANNOT VERIFY
-→ obtain missing evidence or resolve the blocking specification issue
-→ idd review <spec-path> again when verifiable
-```
+→ obtain missing evidence or resolve specification blocker
+→ review again when verifiable
 
-```
+all required children DONE
+→ integrated idd review <parent-spec>
+
+APPROVE on final parent review
+→ parent DONE
+→ IDD complete
 ```
