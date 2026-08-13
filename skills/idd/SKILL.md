@@ -517,7 +517,124 @@ If the current session implemented the change, state that review independence is
     - residual uncertainty;
     - final verdict.
 
+````md
 Allowed verdicts:
+
+```text
+APPROVE
+CHANGES REQUIRED
+CANNOT VERIFY
+````
+
+Use `APPROVE` only when no blocking or important issue remains and the acceptance criteria have sufficient evidence.
+
+## Post-review routing
+
+A review is the final verification gate, but its verdict determines whether the IDD cycle is complete.
+
+### `APPROVE`
+
+The IDD workflow is complete.
+
+Do not invoke another IDD mode automatically.
+
+Return:
+
+```text
+Verdict: APPROVE
+
+IDD workflow complete.
+
+No further IDD phase is required.
+
+Optional repository actions such as commit, push, pull request,
+merge, release, or deployment remain outside IDD and require
+explicit user instruction.
+```
+
+### `CHANGES REQUIRED`
+
+The IDD workflow is not complete.
+
+Return the current host's native invocation for:
+
+```text
+idd implement <spec-path>
+```
+
+State that the corrections must run in a fresh implementation session.
+
+The implementation session must:
+
+1. read the approved spec;
+2. read the current repository state;
+3. address the evidenced review findings;
+4. preserve already-satisfied acceptance criteria;
+5. run the relevant verification again.
+
+After the corrections, the implementation must pass through another independent review.
+
+Return the current host's native invocation for:
+
+```text
+idd review <spec-path>
+```
+
+Do not fix the findings during the review session itself.
+
+### `CANNOT VERIFY`
+
+The IDD workflow is not complete.
+
+State exactly:
+
+* what could not be verified;
+* why it could not be verified;
+* what evidence, environment, access, or decision is missing;
+* whether the uncertainty concerns the implementation or the approved spec.
+
+Do not send the user back to implementation unless the missing evidence reveals or strongly indicates an implementation defect.
+
+If only verification evidence is missing, return the current host's native invocation for:
+
+```text
+idd review <spec-path>
+```
+
+to be run again once the required evidence or environment is available.
+
+If the approved spec itself is contradictory, materially incomplete, or no longer represents the intended behavior:
+
+1. return `CANNOT VERIFY`;
+2. identify the blocking specification problem;
+3. do not edit the spec during review;
+4. instruct the user to correct or re-specify the affected behavior in a separate session;
+5. require another independent review after the corrected spec and implementation are aligned.
+
+## Review immutability
+
+Review is read-only.
+
+During `review`, never:
+
+* modify implementation code;
+* modify tests;
+* rewrite or clarify the spec;
+* resolve open product questions;
+* update `CONTEXT.md`;
+* create or edit ADRs;
+* apply fixes;
+* change repository state.
+
+A reviewer reports findings and evidence. It does not repair them.
+
+If a finding requires a code change, return `CHANGES REQUIRED`.
+
+If a finding requires a product or specification decision, return `CANNOT VERIFY`.
+
+## Review completion contract
+
+Every review must end with exactly one explicit verdict:
 
 ```text
 APPROVE
@@ -525,4 +642,49 @@ CHANGES REQUIRED
 CANNOT VERIFY
 ```
 
-Use `APPROVE` only when no blocking or important issue remains and the acceptance criteria have sufficient evidence.
+Never end a review with ambiguous language such as:
+
+```text
+review completed
+looks good overall
+review closed
+mostly correct
+no major concerns
+```
+
+without also emitting one of the allowed verdicts.
+
+The final section of every review must follow this structure:
+
+```text
+## Verdict
+
+<APPROVE | CHANGES REQUIRED | CANNOT VERIFY>
+
+<brief reason>
+
+## Next step
+
+<explicit next action>
+```
+
+Routing rules:
+
+```text
+APPROVE
+→ IDD complete
+→ no further IDD invocation
+
+CHANGES REQUIRED
+→ fresh implementation session
+→ idd implement <spec-path>
+→ fresh independent review session
+→ idd review <spec-path>
+
+CANNOT VERIFY
+→ obtain missing evidence or resolve the blocking specification issue
+→ idd review <spec-path> again when verifiable
+```
+
+```
+```
