@@ -290,7 +290,7 @@ jobs:
           agent_directories=(
             ".pi/agent/skills"
             ".claude/skills"
-            ".codex/skills"
+            ".agents/skills"
           )
 
           while IFS=$'\t' read -r skill source_directory; do
