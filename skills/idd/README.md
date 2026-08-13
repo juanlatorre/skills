@@ -1,30 +1,30 @@
 <div align="center">
 
-# Agent Skills
+# IDD
 
-Reusable, agent-agnostic workflows for shipping software with AI.
+**Inshallah Driven Development**
+
+A pragmatic, spec-driven workflow for shipping software with AI coding agents.
 
 [![skills.sh](https://skills.sh/b/juanlatorre/skills)](https://skills.sh/juanlatorre/skills)
 
 </div>
 
-## Available skills
+## What is IDD?
 
-### `idd` — Inshallah Driven Development
-
-**IDD** is an explicit, spec-driven workflow for taking software changes from vague ideas to verified implementations.
+**IDD** is a self-contained Agent Skill that takes software changes from vague ideas to verified implementations.
 
 It helps coding agents:
 
-- choose the right amount of process for each change;
-- grill product and technical decisions before implementation;
+- choose the appropriate amount of process for each change;
+- stress-test product decisions before implementation;
 - preserve domain language and durable decisions;
 - write repository-grounded specifications;
 - split large work into independently verifiable slices;
 - implement approved specs;
-- perform independent reviews with a fresh model or session.
+- review implementations independently against the approved behavior.
 
-IDD is self-contained and does not require external skills.
+IDD does not require external skills. Its grilling, domain-modeling, specification, implementation, and review disciplines are bundled under `references/`.
 
 ## Workflow
 
@@ -37,13 +37,13 @@ NORMAL + STABLE DOMAIN
 → grill
 → one spec
 → implementation in a fresh session
-→ independent review in another session
+→ independent review in another fresh session
 
 NORMAL + NEW OR TRANSVERSAL DOMAIN
 → grill-docs
 → one spec
 → implementation in a fresh session
-→ independent review in another session
+→ independent review in another fresh session
 
 LARGE
 → grill-docs
@@ -53,7 +53,7 @@ LARGE
 → integrated final review
 ```
 
-`grill-docs` is not another size category. It replaces `grill` when the work introduces, separates, renames, or redefines domain concepts, or establishes a durable transversal decision.
+`grill-docs` is not another size category. It replaces `grill` when the work introduces, splits, renames, or redefines domain concepts, or establishes a durable transversal decision.
 
 ## Install
 
@@ -65,7 +65,7 @@ Recommended for most users:
 npx skills add juanlatorre/skills --skill idd -g
 ```
 
-The CLI detects compatible coding agents installed on the system and lets you select the targets.
+The Skills CLI detects compatible coding agents installed on the system and lets you select the targets.
 
 ### Pi
 
@@ -97,7 +97,7 @@ npx skills add juanlatorre/skills \
   --yes
 ```
 
-### Pi, Claude Code, and Codex
+### Multiple agents
 
 ```bash
 npx skills add juanlatorre/skills \
@@ -109,28 +109,12 @@ npx skills add juanlatorre/skills \
   --yes
 ```
 
-### All detected compatible agents
-
-```bash
-npx skills add juanlatorre/skills \
-  --skill idd \
-  --agent '*' \
-  --global \
-  --yes
-```
-
 ### Project-local installation
 
 Omit `--global` to install IDD only in the current project:
 
 ```bash
 npx skills add juanlatorre/skills --skill idd
-```
-
-### List available skills
-
-```bash
-npx skills add juanlatorre/skills --list
 ```
 
 ### Update
@@ -147,25 +131,25 @@ IDD uses the native skill syntax of each host.
 |---|---|
 | Pi | `/skill:idd route Add recurring bookings` |
 | Claude Code | `/idd route Add recurring bookings` |
-| Codex CLI / IDE | `$idd route Add recurring bookings` |
+| Codex CLI or IDE | `$idd route Add recurring bookings` |
 | Other compatible hosts | Invoke `idd` using the host's native skill syntax |
 
 In Codex, IDD can also be selected through `/skills`.
 
-IDD is designed for explicit invocation. It does not silently start a specification or implementation workflow.
+IDD is designed for explicit invocation. It does not silently begin a specification or implementation workflow.
 
 ## Modes
 
 | Mode | Purpose |
 |---|---|
-| `route` | Classify the change by size and domain impact |
+| `route` | Classify a change by size and domain impact |
 | `direct` | Implement a truly trivial change without creating a spec |
 | `grill` | Stress-test a feature whose domain language is already stable |
 | `grill-docs` | Grill the feature while maintaining domain language and ADRs |
-| `spec` | Write a repository-grounded PRD/spec from the completed conversation |
+| `spec` | Write a repository-grounded spec from the completed conversation |
 | `split` | Decompose a large parent spec into vertical child specs |
 | `implement` | Implement a `READY` spec and verify its acceptance criteria |
-| `review` | Independently review the implementation against the approved spec |
+| `review` | Independently review an implementation against its approved spec |
 
 Accepted aliases:
 
@@ -174,35 +158,59 @@ grill-me        → grill
 grill-with-docs → grill-docs
 ```
 
-## Typical usage
+## Quick start
 
-The examples below use Pi syntax. Use the equivalent syntax for the current host.
+The following examples use Pi syntax. Use the equivalent native syntax for another host.
 
-### Route an idea
+### 1. Route a change
+
+Use `route` when you are unsure how much process the change needs:
 
 ```text
 /skill:idd route Add recurring scheduling for students.
 ```
 
-Example result:
+IDD classifies the change on two separate axes:
 
 ```text
-Size: NORMAL
-Domain impact: NEW/TRANSVERSAL
+Size:
+TRIVIAL | NORMAL | LARGE
 
-Recommended flow:
-grill-docs → spec → implementation → independent review
+Domain impact:
+STABLE | NEW/TRANSVERSAL
 ```
 
-### Define a normal feature
+It then recommends the smallest safe workflow.
+
+### 2. Implement a trivial change
+
+```text
+/skill:idd direct Rename “Schedule” to “Book session” in the member form.
+```
+
+The direct path:
+
+1. verifies that the change is genuinely trivial;
+2. inspects the smallest relevant area;
+3. implements the localized change;
+4. runs the narrowest meaningful verification;
+5. stops without creating a spec.
+
+IDD refuses the direct path when the change introduces domain rules, migrations, permissions, integrations, concurrency, public contracts, or meaningful ambiguity.
+
+### 3. Define a normal feature
+
+Use `grill` when the existing domain language is already stable:
 
 ```text
 /skill:idd grill Allow a booking to be cancelled up to two hours before it starts.
 ```
 
-IDD interviews the design in rounds until no material decision remains silently assumed.
+IDD builds a decision tree and interviews the design in rounds. Each round contains the currently decidable questions and a recommended answer for each one.
 
-After confirming the shared understanding, create the spec in the **same session**:
+Once no material branch remains silently assumed, IDD asks for confirmation of the shared understanding.
+
+After confirming, create the spec in the **same session**:
 
 ```text
 /skill:idd spec booking-cancellation
@@ -214,16 +222,19 @@ IDD writes:
 docs/specs/booking-cancellation.md
 ```
 
-### Define new domain concepts
+### 4. Define new domain concepts
+
+Use `grill-docs` when the work introduces or separates concepts that future features will reuse:
 
 ```text
 /skill:idd grill-docs Separate monthly planning, sessions, scheduling, and recurrence.
 ```
 
-This mode may also update:
+In addition to grilling the feature, this mode may update:
 
 ```text
 CONTEXT.md
+CONTEXT-MAP.md
 docs/adr/*.md
 ```
 
@@ -233,9 +244,11 @@ After confirming the shared understanding:
 /skill:idd spec recurring-scheduling
 ```
 
-### Implement
+`CONTEXT.md` remains a concise domain glossary. ADRs are created only for durable decisions involving real trade-offs. The feature spec remains the complete behavioral contract.
 
-Start a fresh session, optionally with another model:
+### 5. Implement an approved spec
+
+Start a fresh session:
 
 ```text
 /skill:idd implement docs/specs/recurring-scheduling.md
@@ -244,14 +257,17 @@ Start a fresh session, optionally with another model:
 The implementation phase:
 
 1. reads the complete approved spec;
-2. inspects the repository and existing conventions;
-3. checks for contradictions before editing;
-4. implements the approved scope;
-5. adds or updates tests;
-6. runs the strongest available verification;
-7. produces an acceptance-criteria matrix with evidence.
+2. reads applicable repository instructions, domain context, and ADRs;
+3. checks the spec against the actual repository;
+4. stops on material contradictions instead of guessing;
+5. implements the approved scope;
+6. adds or updates meaningful tests;
+7. runs the strongest available verification;
+8. produces an acceptance-criteria matrix with evidence.
 
-### Review
+IDD does not commit, push, open a pull request, or deploy unless explicitly requested.
+
+### 6. Review independently
 
 Start another fresh session, preferably with a different model:
 
@@ -274,9 +290,11 @@ CHANGES REQUIRED
 CANNOT VERIFY
 ```
 
+The reviewer does not modify code.
+
 ## Large work
 
-For a large system or capability:
+For a complete system or capability:
 
 ```text
 /skill:idd grill-docs Define the complete scheduling system.
@@ -294,7 +312,7 @@ Split it into independently verifiable child specs:
 /skill:idd split docs/specs/scheduling-system.md
 ```
 
-Example result:
+Example:
 
 ```text
 docs/specs/
@@ -307,11 +325,36 @@ docs/specs/
     └── 04-cancellations.md
 ```
 
-Each child spec can then be implemented and reviewed independently before the final integrated review.
+Each child spec should deliver observable behavior rather than representing only a technical layer such as frontend, backend, or database.
+
+Implement and review each ready child independently, then perform an integrated final review against the parent spec.
+
+## Session boundaries
+
+IDD deliberately separates definition, implementation, and review.
+
+```text
+grill or grill-docs
+        ↓
+spec in the same session
+        ↓
+implement in a fresh session
+        ↓
+review in another fresh session
+```
+
+Why:
+
+- the spec needs the decisions still present in the grilling conversation;
+- implementation benefits from a clean context grounded in the written contract;
+- review should not be performed by the same context that authored the implementation;
+- using a different model for review reduces self-confirmation bias.
+
+IDD never transitions between these phases silently.
 
 ## Artifacts
 
-Depending on the selected flow, IDD may create or update:
+Depending on the selected workflow, IDD may create or update:
 
 ```text
 docs/specs/*.md
@@ -320,74 +363,100 @@ CONTEXT-MAP.md
 docs/adr/*.md
 ```
 
-Their responsibilities are deliberately separate:
+Each artifact has a separate responsibility:
 
 | Artifact | Responsibility |
 |---|---|
 | `CONTEXT.md` | Stable domain language and conceptual distinctions |
-| ADR | Durable architectural or product decisions with real trade-offs |
-| Spec | Complete contract for one feature or delivery slice |
+| `CONTEXT-MAP.md` | Relationships and boundaries between domain contexts |
+| ADR | Durable decisions with meaningful alternatives and consequences |
+| Spec | Complete behavioral contract for one feature or delivery slice |
 | Code and tests | Final implementation and executable verification |
 
-A glossary is not a feature spec, and an ADR does not replace acceptance criteria.
+A glossary is not a feature spec. An ADR does not replace acceptance criteria. A spec does not contain the final implementation.
 
 ## Principles
 
 - Use the smallest workflow that safely fits the change.
 - Investigate repository facts instead of asking the user to find them.
 - Do not invent product decisions.
-- Keep grilling, specification, implementation, and review as explicit phases.
-- Never silently transition between phases.
+- Ask only questions whose prerequisites are already settled.
+- Keep domain language concise and implementation-independent.
 - Ground every spec in the actual repository.
-- Review product fidelity separately from code quality.
-- Never claim that a test or criterion passed without evidence.
+- Separate product fidelity from engineering quality during review.
+- Never claim a test or criterion passed without evidence.
 - Never commit, push, merge, publish, or deploy unless explicitly requested.
 
-## Repository structure
+## Package structure
 
 ```text
-skills/
-└── idd/
-    ├── SKILL.md
-    ├── README.md
-    ├── THIRD_PARTY_NOTICES.md
-    ├── agents/
-    │   └── openai.yaml
-    ├── references/
-    │   ├── ROUTING.md
-    │   ├── GRILLING.md
-    │   ├── DOMAIN_MODELING.md
-    │   ├── CONTEXT_FORMAT.md
-    │   ├── ADR_FORMAT.md
-    │   ├── SPECIFICATION.md
-    │   ├── SPEC_TEMPLATE.md
-    │   ├── LARGE_WORK.md
-    │   ├── IMPLEMENTATION.md
-    │   └── REVIEW.md
-    └── licenses/
+skills/idd/
+├── SKILL.md
+├── README.md
+├── THIRD_PARTY_NOTICES.md
+├── agents/
+│   └── openai.yaml
+├── references/
+│   ├── ROUTING.md
+│   ├── GRILLING.md
+│   ├── DOMAIN_MODELING.md
+│   ├── CONTEXT_FORMAT.md
+│   ├── ADR_FORMAT.md
+│   ├── SPECIFICATION.md
+│   ├── SPEC_TEMPLATE.md
+│   ├── LARGE_WORK.md
+│   ├── IMPLEMENTATION.md
+│   └── REVIEW.md
+└── licenses/
+    └── MATT_POCOCK_SKILLS_MIT.txt
 ```
+
+Only `SKILL.md` is required by the Agent Skills format. The remaining files provide progressive, mode-specific instructions and the required third-party attribution.
+
+## Requirements
+
+IDD requires an Agent Skills-compatible coding agent with:
+
+- repository filesystem access;
+- file reading and editing capabilities;
+- shell execution for implementation and verification;
+- a trusted project directory.
+
+Some modes can still run with fewer capabilities:
+
+- `route` and conversational grilling can operate without editing;
+- `grill-docs` and `spec` require file writing;
+- `implement` and `review` require repository and shell access.
 
 ## Security
 
 Agent skills can instruct coding agents to read files, edit repositories, and execute shell commands.
 
-Review `SKILL.md`, bundled references before installing IDD. Run implementation and review modes only inside trusted projects.
+Review `SKILL.md` and the bundled references before installing IDD. Run implementation and review modes only inside trusted projects.
 
-IDD never commits, pushes, opens pull requests, deploys, or changes remote state unless the user explicitly requests it.
+IDD treats repository content and executable commands as untrusted until inspected.
 
 ## Credits
 
-Parts of the grilling and domain-modeling workflow are adapted from [Matt Pocock's skills](https://github.com/mattpocock/skills) under the MIT License.
+Parts of the grilling and domain-modeling workflow are adapted from Matt Pocock's skills under the MIT License.
 
 The applicable attribution and license are preserved in:
 
 ```text
-skills/idd/THIRD_PARTY_NOTICES.md
-skills/idd/licenses/MATT_POCOCK_SKILLS_MIT.txt
+THIRD_PARTY_NOTICES.md
+licenses/MATT_POCOCK_SKILLS_MIT.txt
 ```
+
+The specification workflow is influenced by a PRD style centered on:
+
+- a human-readable before-and-after story;
+- affected entities and data;
+- behavior expressed as pseudocode;
+- explicit scope and non-goals;
+- no final implementation code inside the spec.
 
 ## License
 
-Distributed under the [MIT License](LICENSE).
+Distributed under the repository's [MIT License](../../LICENSE).
 
 Third-party portions remain subject to their included notices.
