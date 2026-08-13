@@ -1,0 +1,7 @@
+interface:
+  display_name: "IDD"
+  short_description: "Spec-driven workflow for agentic software delivery"
+  default_prompt: "Use IDD to route and execute this software change."
+
+policy:
+  allow_implicit_invocation: false
