@@ -350,7 +350,6 @@ skills/
 └── idd/
     ├── SKILL.md
     ├── README.md
-    ├── VERSION
     ├── THIRD_PARTY_NOTICES.md
     ├── agents/
     │   └── openai.yaml

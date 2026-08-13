@@ -1,0 +1,324 @@
+name: Validate skills
+
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+      - ".github/workflows/validate-skills.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "skills/**"
+      - ".github/workflows/validate-skills.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-skills-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate and install skills
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      CI: "true"
+      NO_COLOR: "1"
+      DISABLE_TELEMETRY: "1"
+
+      # Puedes cambiarlo por skills@x.y.z para fijar una versión.
+      SKILLS_CLI: skills@latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate skill packages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+
+          const skillsRoot = "skills";
+          const runnerTemp = process.env.RUNNER_TEMP;
+
+          if (!fs.existsSync(skillsRoot)) {
+            throw new Error(`Missing skills directory: ${skillsRoot}`);
+          }
+
+          const discovered = [];
+          const names = new Map();
+
+          function readFrontmatter(skillPath) {
+            const contents = fs.readFileSync(skillPath, "utf8");
+
+            const match = contents.match(
+              /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/
+            );
+
+            if (!match) {
+              throw new Error(`${skillPath}: missing YAML frontmatter`);
+            }
+
+            return {
+              contents,
+              frontmatter: match[1],
+            };
+          }
+
+          function readScalar(frontmatter, key) {
+            const expression = new RegExp(`^${key}:\\s*(.*)$`, "m");
+            const match = frontmatter.match(expression);
+
+            if (!match) {
+              return null;
+            }
+
+            return match[1]
+              .trim()
+              .replace(/^(['"])(.*)\1$/, "$2");
+          }
+
+          function validateSkill(directory) {
+            const skillPath = path.join(directory, "SKILL.md");
+            const { contents, frontmatter } = readFrontmatter(skillPath);
+
+            const name = readScalar(frontmatter, "name");
+            const description = readScalar(frontmatter, "description");
+
+            if (!name) {
+              throw new Error(`${skillPath}: missing frontmatter field "name"`);
+            }
+
+            if (!description) {
+              throw new Error(
+                `${skillPath}: missing frontmatter field "description"`
+              );
+            }
+
+            if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+              throw new Error(
+                `${skillPath}: invalid skill name "${name}"`
+              );
+            }
+
+            if (names.has(name)) {
+              throw new Error(
+                `Duplicate skill name "${name}" in:\n` +
+                `- ${names.get(name)}\n` +
+                `- ${directory}`
+              );
+            }
+
+            names.set(name, directory);
+
+            const references = [
+              ...new Set(
+                [...contents.matchAll(
+                  /references\/[A-Za-z0-9._/-]+\.md/g
+                )].map((match) => match[0])
+              ),
+            ];
+
+            for (const reference of references) {
+              const referencePath = path.join(directory, reference);
+
+              if (!fs.existsSync(referencePath)) {
+                throw new Error(
+                  `${skillPath}: missing referenced file ${reference}`
+                );
+              }
+            }
+
+            discovered.push({
+              name,
+              directory,
+            });
+          }
+
+          function walk(directory) {
+            for (const entry of fs.readdirSync(directory, {
+              withFileTypes: true,
+            })) {
+              if (!entry.isDirectory()) {
+                continue;
+              }
+
+              const child = path.join(directory, entry.name);
+              const skillPath = path.join(child, "SKILL.md");
+
+              if (fs.existsSync(skillPath)) {
+                validateSkill(child);
+
+                // A shallower SKILL.md owns this skill directory.
+                continue;
+              }
+
+              walk(child);
+            }
+          }
+
+          walk(skillsRoot);
+
+          if (discovered.length === 0) {
+            throw new Error("No SKILL.md files were found");
+          }
+
+          /*
+           * Repository-specific checks for IDD.
+           */
+          const idd = discovered.find((skill) => skill.name === "idd");
+
+          if (!idd) {
+            throw new Error('Expected skill "idd" was not found');
+          }
+
+          const iddRequiredFiles = [
+            "README.md",
+            "THIRD_PARTY_NOTICES.md",
+            "agents/openai.yaml",
+            "licenses/MATT_POCOCK_SKILLS_MIT.txt",
+          ];
+
+          for (const relativePath of iddRequiredFiles) {
+            const fullPath = path.join(idd.directory, relativePath);
+
+            if (!fs.existsSync(fullPath)) {
+              throw new Error(
+                `IDD package is missing ${relativePath}`
+              );
+            }
+          }
+
+          const iddSkill = fs.readFileSync(
+            path.join(idd.directory, "SKILL.md"),
+            "utf8"
+          );
+
+          if (!/^disable-model-invocation:\s*true\s*$/m.test(iddSkill)) {
+            throw new Error(
+              "IDD must declare disable-model-invocation: true"
+            );
+          }
+
+          const openaiMetadata = fs.readFileSync(
+            path.join(idd.directory, "agents/openai.yaml"),
+            "utf8"
+          );
+
+          if (!/allow_implicit_invocation:\s*false\b/.test(openaiMetadata)) {
+            throw new Error(
+              "agents/openai.yaml must disable implicit invocation"
+            );
+          }
+
+          const outputPath = path.join(
+            runnerTemp,
+            "expected-skills.tsv"
+          );
+
+          fs.writeFileSync(
+            outputPath,
+            discovered
+              .map(({ name, directory }) => `${name}\t${directory}`)
+              .join("\n") + "\n"
+          );
+
+          console.log(
+            `Validated ${discovered.length} skill package(s):`
+          );
+
+          for (const skill of discovered) {
+            console.log(`- ${skill.name} (${skill.directory})`);
+          }
+          NODE
+
+      - name: Verify Skills CLI discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npx --yes "$SKILLS_CLI" add . --list \
+            | tee "$RUNNER_TEMP/skills-list.txt"
+
+          while IFS=$'\t' read -r skill source_directory; do
+            if ! grep -Eiq \
+              "(^|[^[:alnum:]_-])${skill}([^[:alnum:]_-]|$)" \
+              "$RUNNER_TEMP/skills-list.txt"
+            then
+              echo "::error::Skills CLI did not discover '${skill}'"
+              exit 1
+            fi
+
+            echo "Discovered: ${skill}"
+          done < "$RUNNER_TEMP/expected-skills.tsv"
+
+      - name: Test installation for Pi, Claude Code, and Codex
+        shell: bash
+        env:
+          HOME: ${{ runner.temp }}/skill-home
+          npm_config_cache: ${{ runner.temp }}/npm-cache
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$HOME"
+
+          npx --yes "$SKILLS_CLI" add . \
+            --skill '*' \
+            --agent pi \
+            --agent claude-code \
+            --agent codex \
+            --global \
+            --copy \
+            --yes
+
+          agent_directories=(
+            ".pi/agent/skills"
+            ".claude/skills"
+            ".codex/skills"
+          )
+
+          while IFS=$'\t' read -r skill source_directory; do
+            for agent_directory in "${agent_directories[@]}"; do
+              target_directory="$HOME/$agent_directory/$skill"
+
+              if [[ ! -f "$target_directory/SKILL.md" ]]; then
+                echo "::error::${skill} was not installed in ${agent_directory}"
+                exit 1
+              fi
+
+              while IFS= read -r -d '' source_file; do
+                relative_path="${source_file#"$source_directory/"}"
+                target_file="$target_directory/$relative_path"
+
+                if [[ ! -f "$target_file" ]]; then
+                  echo "::error::Missing installed file: ${target_file}"
+                  exit 1
+                fi
+
+                if ! cmp --silent "$source_file" "$target_file"; then
+                  echo "::error::Installed file differs: ${target_file}"
+                  exit 1
+                fi
+              done < <(
+                find "$source_directory" -type f -print0
+              )
+
+              echo "Installed correctly: ${skill} → ${agent_directory}"
+            done
+          done < "$RUNNER_TEMP/expected-skills.tsv"
