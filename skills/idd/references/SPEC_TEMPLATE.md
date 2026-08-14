@@ -1,6 +1,6 @@
 # PRD — <Feature name>
 
-- **Status:** DRAFT | READY | IMPLEMENTING | VALIDATING | DONE
+- **Status:** DRAFT | READY
 - **Owner:** <name or TBD>
 - **Created:** YYYY-MM-DD
 - **Size:** NORMAL | LARGE-PARENT | LARGE-CHILD

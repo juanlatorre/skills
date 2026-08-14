@@ -1,0 +1,65 @@
+{
+  "skill_name": "idd",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run idd implement docs/specs/trainer-data.md. The READY spec has 24 acceptance criteria spanning retention policy, audited impersonation, asynchronous exports, purge notifications, migrations, and an admin UI. No child specs exist yet.",
+      "expected_output": "The agent reclassifies the flat spec as LARGE before editing and routes it to a parent/child split instead of beginning a partial implementation.",
+      "expectations": [
+        "The response performs the mandatory pre-implementation scale checkpoint.",
+        "The response identifies multiple independently verifiable behavior or risk boundaries.",
+        "The response does not edit code or begin a partial implementation.",
+        "The next step preserves the exact spec path and gives an exact idd split command."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Run idd implement docs/specs/trainer-data.md in a linked Git worktree. The prior review persisted a CHANGES REQUIRED handoff with findings B1 and I1 under the Git path for idd/reviews. Address the review.",
+      "expected_output": "The agent resolves the worktree-safe Git metadata path, reads the ledger before broad exploration, fixes only the open findings and affected behavior, and runs targeted verification.",
+      "expectations": [
+        "The response resolves the directory with git rev-parse --path-format=absolute --git-path idd/reviews, derives the file deterministically from ACTIVE_SPEC, and does not assume .git is a directory.",
+        "The response treats the run as corrective implementation and reads B1 and I1 before general exploration.",
+        "The work is bounded to the open findings and directly affected seams rather than restarting the full implementation.",
+        "Verification is targeted to the findings; an expensive full suite is not repeated merely because the session is fresh.",
+        "The completion report maps B1 and I1 to fixes and evidence, then routes to a fresh corrective review of the exact spec path."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Run idd review docs/specs/trainer-data.md. An open review ledger says corrective review round 0, findings B1 and I1 are open, and the corrective implementation appended focused passing tests. The rest of the original diff and acceptance evidence are unchanged.",
+      "expected_output": "The agent runs corrective review round 1, verifies only the open findings, corrective delta, affected criteria, and fix-induced serious regressions, while reusing valid prior evidence.",
+      "expectations": [
+        "The review kind is CORRECTIVE round 1 rather than INITIAL.",
+        "The scope is limited to B1, I1, the corrective delta, affected criteria, and serious regressions introduced by the fix.",
+        "The response does not announce a fresh full audit of the entire original diff.",
+        "Stable finding IDs are closed or kept open with evidence.",
+        "Optional follow-ups do not block APPROVE.",
+        "Still-valid acceptance and test evidence is reused instead of automatically rerunning the full suite."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Run idd review docs/specs/complex-migration.md. The handoff already records corrective review round 1. After a second correction, important findings remain and each correction has exposed another serious migration invariant failure.",
+      "expected_output": "The agent performs the bounded second corrective review, then stops the patch loop and routes the affected contract to replanning or splitting.",
+      "expectations": [
+        "The response does not route to a third blind corrective implementation cycle.",
+        "The verdict remains CHANGES REQUIRED and the logical workflow state is REPLAN REQUIRED.",
+        "The response identifies the recurring root cause rather than merely listing another wave of patches.",
+        "The next step targets only the affected contract with an exact grill, grill-docs, or split command.",
+        "Unrelated completed behavior remains closed."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Run idd review docs/specs/member-birth-date.md for the first time. There is no open review handoff. The implementation is a small branch diff with focused tests but the repository-wide suite is expensive.",
+      "expected_output": "The agent performs one complete initial review, persists an actionable ledger only if material findings exist, and budgets expensive verification for the stable candidate.",
+      "expectations": [
+        "The review kind is INITIAL and covers both spec fidelity and engineering quality for the full relevant diff.",
+        "The review distinguishes blocking, important, and optional findings, and optional items do not block approval.",
+        "If changes are required, the handoff is stored under the path resolved by git rev-parse --git-path rather than literal .git/idd.",
+        "The response does not run the expensive repository-wide suite repeatedly without a material evidence gap.",
+        "The response ends with exactly one verdict and an exact next step using the active spec path."
+      ]
+    }
+  ]
+}

@@ -26,6 +26,8 @@ Each child must:
 - leave the system in a coherent state when completed;
 - avoid duplicating parent decisions.
 
+If a child still contains multiple independently verifiable outcomes or repeatedly produces new review waves, it is not a usable child boundary. Split or redefine that child before continuing implementation.
+
 Prefer:
 
 ```text
@@ -74,3 +76,9 @@ After the parent domain is settled:
 
 - use `/skill:idd grill` for a child that only applies established terms and rules;
 - use `/skill:idd grill-docs` for a child that introduces new concepts or changes a transversal decision.
+
+## Convergence
+
+Each child has its own bounded implementation and review ledger. A corrective re-review verifies only open findings and the corrective delta; it does not reopen approved siblings.
+
+After all required children are independently `DONE`, run one integrated parent review for cross-child invariants, end-to-end behavior, and rollout composition. Reuse child evidence unless integration changes invalidate it.

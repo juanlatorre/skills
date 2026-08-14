@@ -77,4 +77,6 @@ Use `READY` only when:
 - repository constraints have been checked;
 - the work can be implemented without inventing a product decision.
 
+Before marking `READY`, re-check delivery scale. If the contract contains multiple independently implementable and reviewable outcomes, subsystems, permission/data boundaries, or migration/rollout stages, treat it as a parent spec and route to `idd split`. Never send a flat `LARGE` spec directly to implementation.
+
 Otherwise use `DRAFT` and identify blockers precisely.

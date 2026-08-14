@@ -48,12 +48,14 @@ NORMAL + NEW OR TRANSVERSAL DOMAIN
 LARGE
 → grill-docs
 → parent spec
-→ child specs
-→ multiple implementations and reviews
+→ split into child specs
+→ bounded child implementations and reviews
 → integrated final review
 ```
 
 `grill-docs` is not another size category. It replaces `grill` when the work introduces, splits, renames, or redefines domain concepts, or establishes a durable transversal decision.
+
+IDD re-checks size when grilling closes, before a spec becomes `READY`, and before implementation. A flat spec that cannot be implemented and independently reviewed reliably in one bounded cycle is `LARGE` and must be split.
 
 ## Install
 
@@ -262,8 +264,11 @@ The implementation phase:
 4. stops on material contradictions instead of guessing;
 5. implements the approved scope;
 6. adds or updates meaningful tests;
-7. runs the strongest available verification;
-8. produces an acceptance-criteria matrix with evidence.
+7. runs focused and affected-subsystem verification;
+8. reserves expensive repository-wide checks for the stable candidate;
+9. produces an acceptance-criteria matrix with evidence.
+
+If an open review handoff exists, `implement` becomes corrective: it addresses the recorded blocking/important finding IDs and verifies the affected behavior without restarting the entire implementation.
 
 IDD does not commit, push, open a pull request, or deploy unless explicitly requested.
 
@@ -291,6 +296,10 @@ CANNOT VERIFY
 ```
 
 The reviewer does not modify code.
+
+The first review covers the complete relevant diff. A review after corrections is deliberately narrower: it verifies the open findings, corrective delta, affected criteria, and regressions caused by the fix. It does not restart a complete audit.
+
+IDD preserves findings in Git metadata using a worktree-safe path, so a fresh corrective session does not lose the previous review. Optional improvements do not block approval. After at most two corrective review rounds, persistent serious findings trigger targeted replanning or splitting instead of another blind patch loop.
 
 ## Large work
 
@@ -329,6 +338,8 @@ Each child spec should deliver observable behavior rather than representing only
 
 Implement and review each ready child independently, then perform an integrated final review against the parent spec.
 
+Corrective reviews never reopen unrelated approved children. The integrated parent review focuses on cross-child invariants and end-to-end behavior.
+
 ## Session boundaries
 
 IDD deliberately separates definition, implementation, and review.
@@ -349,6 +360,8 @@ Why:
 - implementation benefits from a clean context grounded in the written contract;
 - review should not be performed by the same context that authored the implementation;
 - using a different model for review reduces self-confirmation bias.
+
+Fresh sessions do not mean fresh amnesia: review findings and still-valid verification evidence are handed forward explicitly. Expensive checks are not repeated merely because the model or session changed.
 
 IDD never transitions between these phases silently.
 

@@ -88,3 +88,7 @@ Recommended grilling mode:
 - A large feature does not require `grill-docs` on every child.
 - Use `grill` for children whose domain is already settled.
 - `grill-docs` is not a fourth size category. It is the grilling variant for durable domain knowledge.
+- Classification is provisional until grilling closes and the complete contract is visible.
+- Re-check size before a spec becomes `READY` and again before implementation edits code.
+- If one flat spec contains several independently verifiable behaviors, subsystems, permission/data boundaries, or migration stages, reclassify it as `LARGE` and run `split`.
+- A change that cannot be implemented and independently reviewed reliably in one bounded cycle is operationally `LARGE`, even when its product story sounds singular.
