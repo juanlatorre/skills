@@ -6,7 +6,7 @@ compatibility: Requires an Agent Skills-compatible coding agent with repository 
 disable-model-invocation: true
 metadata:
   author: juanlatorre
-  version: "3.0.0"
+  version: "3.1.0"
 ---
 
 # IDD — Inshallah Driven Development
@@ -75,6 +75,30 @@ LARGE
 12. A valid explicit `implement` invocation authorizes implementation. Do not pause to ask whether to begin or continue unless a real blocker or scope-changing decision exists.
 13. If a required reference or host capability is unavailable, identify the precise packaging or capability failure and stop.
 14. Every completed mode ends with `## Next step`.
+
+### Optional subagent delegation
+
+IDD is single-agent by default. Delegation is opt-in and is allowed only for `split`, `implement`, and `review`. Never delegate any part of `route`, `direct`, `grill`, `grill-docs`, or `spec`; their 3.0.0 behavior remains unchanged.
+
+Enable delegation only when the user explicitly requests it for the current phase or for explicitly named eligible phases in the current workflow. Do not infer permission from task size, available host features, a previous workflow, or a previous session. Any phase not covered by the user's instruction runs single-agent.
+
+Conversational controls include:
+
+```text
+Use subagents for this implementation.
+Use subagents for split and review in this workflow.
+Use subagents for this workflow.
+Do not use subagents.
+```
+
+`Use subagents for this workflow` enables delegation only in the eligible `split`, `implement`, and `review` phases of the current workflow. `Do not use subagents` disables delegation and overrides earlier enablement for the covered phase or workflow.
+
+When delegation is enabled:
+
+1. The primary agent owns the phase, assigns bounded tasks with explicit inputs, outputs, and boundaries, and remains the sole interface for workflow state and user-facing conclusions.
+2. Every subagent must follow the same spec, repository instructions, core contracts, and safety constraints as the primary agent.
+3. Subagent output is evidence or a candidate contribution, never self-validating. The primary agent must inspect and reconcile it before acceptance.
+4. If the host cannot create subagents, continue the phase single-agent and state that delegation was requested but unavailable. Do not treat missing subagent capability as an IDD failure.
 
 ### Required references
 
@@ -247,6 +271,8 @@ Never send a flat `LARGE` spec directly to implementation.
 
 Require and completely read the parent spec plus `references/LARGE_WORK.md`. Create vertical, independently implementable and reviewable child specs and an index with dependencies, inherited invariants, ordering, parallelism, child state, and integrated parent criteria.
 
+When the user has enabled delegation for `split`, subagents may independently analyze decomposition options, dependencies, inherited invariants, delivery boundaries, and safe parallelism. Treat their work as advisory analysis: the primary agent must compare and reconcile it, and exclusively owns the final child-spec plan, child specs, index, ordering, and next-step commands.
+
 Do not split mechanically into frontend/backend/database unless those are genuine delivery boundaries. Do not implement. End with exact commands for the ready child or children.
 
 ### `implement`
@@ -265,6 +291,8 @@ Choose one path:
 - **Initial implementation:** implement the complete bounded scope and its tests.
 - **Corrective implementation:** address only open blocking/important finding IDs and directly affected behavior. Preserve already-verified criteria and do not re-audit unrelated code.
 
+When the user has enabled delegation for `implement`, use subagents only for isolated, non-overlapping implementation slices or independent supporting work. Before dispatch, define each slice's ownership, file or subsystem boundaries, inputs, expected output, dependencies, and verification responsibility. Avoid concurrent overlapping edits unless the host provides safe isolation, such as separate worktrees, and the boundaries and integration order are explicit. The primary agent must inspect and integrate every contribution, resolve cross-slice conflicts, preserve overall coherence, run integrated verification, and produce the final acceptance matrix.
+
 Use small coherent slices. Run focused and broader relevant checks during development. Defer an expensive repository-wide suite to the final stable candidate unless repository instructions explicitly require it earlier. Reuse valid evidence tied to unchanged code; do not rerun expensive checks merely because the session changed.
 
 Report changed behavior/files, exact checks, residual risk, and an evidence-backed acceptance matrix. A corrective report must map each finding ID to its fix and targeted verification. End at `IMPLEMENTED` with an exact fresh independent `review ACTIVE_SPEC` command.
@@ -278,6 +306,8 @@ Choose exactly one review kind:
 - **INITIAL** — no open ledger exists. Review the full relevant diff on both spec fidelity and engineering quality.
 - **CORRECTIVE** — an open ledger exists. Verify only the open blocking/important findings, the corrective delta, affected criteria/invariants, and new blocking/important regressions introduced by that delta. Do not restart a full audit or actively search unrelated closed areas.
 - **INTEGRATED PARENT** — all required child workflows are `DONE`. Review cross-child behavior and the complete parent contract without reopening independently approved child internals unless integration evidence invalidates them.
+
+When the user has enabled delegation for `review`, subagents may independently inspect distinct, explicitly assigned lenses such as spec fidelity, architecture, security/privacy, tests, or migrations/regressions. Subagent review is strictly read-only: subagents must not edit code, tests, specs, working-tree files, or the review ledger, and must not issue the authoritative verdict. The primary reviewer must validate evidence against the actual diff and spec, deduplicate and reconcile candidate findings, determine final severities, manage the ledger, and issue the single final verdict.
 
 Review is read-only except for its Git-metadata ledger. Report only evidenced findings with severity `BLOCKING`, `IMPORTANT`, or `OPTIONAL`. Optional improvements never block approval and should be listed in the final response rather than extending the correction loop. On `APPROVE`, delete the ledger; optional follow-ups are not open IDD state and become tracker work only if the user explicitly requests it.
 
