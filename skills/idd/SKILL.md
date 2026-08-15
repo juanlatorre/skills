@@ -1,23 +1,28 @@
 ---
 name: idd
-description: "Inshallah Driven Development (IDD), an explicit software-delivery workflow for routing changes, grilling decisions, maintaining domain language and ADRs, writing repository-grounded specs, splitting large work, implementing approved specs, and independently reviewing changes. Modes: route, direct, grill, grill-docs, spec, split, implement, and review."
+description: "Inshallah Driven Development (IDD), a stateful software-delivery workflow for turning ideas into verified code. IDD routes scope, grills decisions, preserves domain language and ADRs, writes repository-grounded specs, splits large work, implements isolated candidates, reviews them independently, and can resume deterministically with start/continue. Modes: start, continue, status, route, direct, grill, grill-docs, spec, split, implement, and review."
 license: MIT. Adapted third-party portions are documented in THIRD_PARTY_NOTICES.md.
-compatibility: Requires an Agent Skills-compatible coding agent with repository filesystem access. Implementation and review also require shell execution inside a trusted project.
+compatibility: Requires an Agent Skills-compatible coding agent with repository filesystem access. Managed start/continue workflows additionally require Git for durable local workflow state and candidate checkpoints.
 disable-model-invocation: true
 metadata:
   author: juanlatorre
-  version: "3.1.0"
+  version: "4.0.0"
 ---
 
 # IDD — Inshallah Driven Development
 
-A controlled path from an idea to verified code. The workflow must converge: scale work before implementation, preserve review state across sessions, and narrow corrective reviews instead of restarting them.
+IDD turns an idea into a verified candidate while keeping the workflow itself explicit, durable, and resumable.
 
-## Activation
+Version 4 introduces a managed workflow map inspired by wayfinding concepts: **destination, frontier, fog, claims, candidate lineage, and deterministic continuation**.
+
+## Invocation
 
 IDD is explicit. If the user did not request `idd`, `Inshallah Driven Development`, or one of these modes, show the modes and stop:
 
 ```text
+idd start <change or idea>
+idd continue [workflow id]
+idd status [workflow id]
 idd route <change or idea>
 idd direct <small explicit change>
 idd grill <plan, decision, or feature>
@@ -25,12 +30,12 @@ idd grill-docs <plan, decision, or feature>
 idd spec <slug or destination path>
 idd split <parent spec path>
 idd implement <spec path>
-idd review <spec path> [base branch or commit]
+idd review <spec path> [base commit]
 ```
 
 Aliases: `grill-me → grill`, `grill-with-docs → grill-docs`.
 
-Use the current host's native explicit invocation syntax when known:
+Use the current host's native explicit syntax when known:
 
 ```text
 Pi:          /skill:idd <mode> <arguments>
@@ -38,51 +43,107 @@ Claude Code: /idd <mode> <arguments>
 Codex:       $idd <mode> <arguments>, or select idd through /skills
 ```
 
-Otherwise label host-neutral notation. Do not invent commands for creating sessions or switching models.
+Otherwise use host-neutral notation and label it.
 
-## Workflow
+## Two ways to use IDD
+
+### Managed workflow — recommended
+
+Use `start` once, then `continue` from fresh sessions:
 
 ```text
-TRIVIAL
-→ direct → focused verification → DONE
+idd start <idea>
+→ decisions when required
+→ deterministic steps auto-advance
+→ fresh-session boundary
 
-NORMAL + STABLE DOMAIN
-→ grill → spec → fresh implement → independent review → DONE
+idd continue
+→ next deterministic action
+→ fresh-session boundary
 
-NORMAL + NEW/TRANSVERSAL DOMAIN
-→ grill-docs → spec → fresh implement → independent review → DONE
-
-LARGE
-→ grill-docs → parent spec → split → child implement/review cycles
-→ one integrated parent review → DONE
+idd continue
+→ ...
 ```
 
-`grill-docs` is a domain-impact choice, not a size. `LARGE` work must be split before implementation.
+The user should not need to remember spec paths, child numbers, review bases, candidate SHAs, or which phase comes next.
+
+### Explicit modes — advanced / compatibility
+
+The individual modes remain available. They perform one bounded phase and return an exact next step, but they do not provide all managed-workflow guarantees unless an active workflow exists.
 
 ## Core contracts
 
 1. Use the user's language and preserve canonical repository terms.
 2. Read applicable `AGENTS.md` and repository instructions before changing files.
 3. Resolve bundled references relative to this skill directory.
-4. Load only the references required by the selected mode.
-5. Never silently transition between modes.
-6. `grill` and `grill-docs` may span turns. Every other mode is one bounded operation.
-7. Product definition, specification, implementation, and independent review are separate phases.
-8. Investigate repository facts yourself. Ask the user only for product decisions and genuine trade-offs.
-9. Never invent permissions, failure behavior, domain meaning, acceptance criteria, or missing product rules.
-10. Never claim evidence, commands, tests, or criteria that were not actually verified.
-11. Never commit, push, open a pull request, merge, publish, deploy, or alter remote state unless explicitly requested.
-12. A valid explicit `implement` invocation authorizes implementation. Do not pause to ask whether to begin or continue unless a real blocker or scope-changing decision exists.
-13. If a required reference or host capability is unavailable, identify the precise packaging or capability failure and stop.
-14. Every completed mode ends with `## Next step`.
+4. Load only references required by the current action.
+5. Product decisions belong to the user; repository facts belong to the agent to investigate.
+6. Never invent permissions, domain meaning, failure behavior, acceptance criteria, or product rules.
+7. Never claim evidence, commands, tests, or criteria that were not actually verified.
+8. Never push, open a pull request, merge, publish, release, deploy, tag, or mutate remote state unless explicitly requested.
+9. Managed workflow checkpoint commits are local workflow mechanics, not delivery authorization. See `references/CHECKPOINTS.md`.
+10. Review is independent and read-only with respect to product/code artifacts; only Git-metadata workflow/review state may be written.
+11. Specs store behavioral contracts only: `DRAFT` or `READY`. Execution status belongs to workflow state.
+12. Every child in LARGE work has exactly one candidate lineage and one review lineage. Do not mix independently reviewable children into one candidate.
+13. Do not silently cross a **decision boundary**, **isolation boundary**, **safety boundary**, or **blocker**.
+14. IDD MAY auto-transition when exactly one valid next action exists, no user decision is required, no independent context is required, and the transition adds no unapproved external side effect.
+15. Every completed action ends with `## Next step`. In managed workflows the preferred command is usually `idd continue`.
 
-### Optional subagent delegation
+## Required references
 
-IDD is single-agent by default. Delegation is opt-in and is allowed only for `split`, `implement`, and `review`. Never delegate any part of `route`, `direct`, `grill`, `grill-docs`, or `spec`; their 3.0.0 behavior remains unchanged.
+- managed state / `start` / `continue` / `status`: [workflow](references/WORKFLOW.md)
+- managed commits and candidate isolation: [checkpoints](references/CHECKPOINTS.md)
+- `route`, `direct`: [routing](references/ROUTING.md)
+- `grill`: [grilling](references/GRILLING.md)
+- `grill-docs`: [grilling](references/GRILLING.md), [domain modeling](references/DOMAIN_MODELING.md), [context format](references/CONTEXT_FORMAT.md), [ADR format](references/ADR_FORMAT.md)
+- `spec`: [specification](references/SPECIFICATION.md), [spec template](references/SPEC_TEMPLATE.md)
+- `split`: [large work](references/LARGE_WORK.md)
+- `implement`: [implementation](references/IMPLEMENTATION.md), [checkpoints](references/CHECKPOINTS.md)
+- `review`: [review](references/REVIEW.md), [checkpoints](references/CHECKPOINTS.md)
 
-Enable delegation only when the user explicitly requests it for the current phase or for explicitly named eligible phases in the current workflow. Do not infer permission from task size, available host features, a previous workflow, or a previous session. Any phase not covered by the user's instruction runs single-agent.
+## Managed workflow state
 
-Conversational controls include:
+Managed workflows require Git. Resolve shared metadata through the common Git directory, never a literal `.git/` path:
+
+```sh
+GIT_COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
+IDD_DIR="$GIT_COMMON_DIR/idd"
+WORKFLOW_DIR="$IDD_DIR/workflows"
+REVIEW_DIR="$IDD_DIR/reviews"
+```
+
+The workflow JSON in `WORKFLOW_DIR` is the **single operational source of truth**.
+
+Other artifacts have one responsibility each:
+
+```text
+spec / child spec     → approved behavioral contract
+CONTEXT.md / ADR      → durable domain knowledge and decisions
+workflow JSON         → execution state, dependencies, claims, candidates, next action
+Git commits           → exact candidate states
+review ledger         → currently open review findings
+```
+
+Do not store dynamic execution state such as `DONE`, `next child`, candidate SHA, or review verdict in specs or hand-maintained README prose.
+
+## Destination, frontier, fog, and claims
+
+Every managed workflow has a **destination**: one or two lines describing what successful completion means.
+
+For LARGE work:
+
+- **children** are sharp, independently implementable/reviewable outcomes;
+- **frontier** is computed, not manually stored: READY children whose dependencies are DONE and which are not actively claimed;
+- **fog** contains in-scope work that is visible but not yet precise enough to become a child;
+- **claims** prevent two sessions/worktrees from implementing the same child.
+
+Never invent a complete child graph just to eliminate fog. Re-evaluate fog as approved children reveal more of the path.
+
+## Optional subagent delegation
+
+IDD is single-agent by default. Delegation is opt-in and allowed only for `split`, `implement`, and `review`. Never delegate `route`, `direct`, `grill`, `grill-docs`, or `spec`.
+
+User controls include:
 
 ```text
 Use subagents for this implementation.
@@ -91,133 +152,126 @@ Use subagents for this workflow.
 Do not use subagents.
 ```
 
-`Use subagents for this workflow` enables delegation only in the eligible `split`, `implement`, and `review` phases of the current workflow. `Do not use subagents` disables delegation and overrides earlier enablement for the covered phase or workflow.
+Persist delegation preferences in managed workflow state so fresh sessions retain them.
 
 When delegation is enabled:
 
-1. The primary agent owns the phase, assigns bounded tasks with explicit inputs, outputs, and boundaries, and remains the sole interface for workflow state and user-facing conclusions.
-2. Every subagent must follow the same spec, repository instructions, core contracts, and safety constraints as the primary agent.
-3. Subagent output is evidence or a candidate contribution, never self-validating. The primary agent must inspect and reconcile it before acceptance.
-4. If the host cannot create subagents, continue the phase single-agent and state that delegation was requested but unavailable. Do not treat missing subagent capability as an IDD failure.
+1. the primary agent owns workflow state and final conclusions;
+2. subagents receive explicit scope, inputs, boundaries, and expected output;
+3. subagent output is candidate evidence/work, never self-validating;
+4. if host delegation is unavailable, continue single-agent and state that fact;
+5. implementation subagents must use isolated non-overlapping work, preferably separate worktrees/branches when editing concurrently;
+6. review subagents are read-only and never issue the authoritative verdict.
 
-### Required references
+## Mandatory scale checkpoints
 
-- `route`, `direct`: [routing](references/ROUTING.md)
-- `grill`: [grilling](references/GRILLING.md)
-- `grill-docs`: [grilling](references/GRILLING.md), [domain modeling](references/DOMAIN_MODELING.md), [context format](references/CONTEXT_FORMAT.md), [ADR format](references/ADR_FORMAT.md)
-- `spec`: [specification](references/SPECIFICATION.md), [spec template](references/SPEC_TEMPLATE.md)
-- `split`: [large work](references/LARGE_WORK.md)
-- `implement`: [implementation](references/IMPLEMENTATION.md)
-- `review`: [review](references/REVIEW.md)
-
-### Mandatory scale checkpoints
-
-Classify size during `route`, then re-check it:
+Classify during routing, then re-check:
 
 1. when grilling closes;
 2. before a spec becomes `READY`;
-3. before `implement` edits code.
+3. before implementation edits code.
 
-Reclassify as `LARGE` when the approved outcome contains multiple independently verifiable behaviors, subsystems, migration/rollout stages, or permission/data boundaries, or when one implementation plus review is unlikely to fit reliably in one session.
+Reclassify to `LARGE` when one bounded implementation/review cycle would hide independently verifiable behaviors, permission/data boundaries, rollout/migration stages, or too much context.
 
-Do not use line count alone. The operational test is whether one agent can implement the whole contract and another can review it completely without losing context or repeatedly rediscovering scope.
+A flat `LARGE` spec must not be implemented. Route it to parent + `split`.
 
-If a checkpoint says `LARGE`, stop the flat flow. Create or use a parent spec and run `split`; do not begin a partial implementation of the flat spec.
+# Managed modes
 
-### Active specification and next step
+## `start`
 
-Once a mode knows a spec path, preserve it exactly:
+Read `references/WORKFLOW.md` first.
 
-```text
-ACTIVE_SPEC = <resolved spec path>
-```
+`start` creates a managed workflow and auto-advances until the first real boundary.
 
-All later commands use that path unless moving explicitly to a child or parent spec. Never make the user reconstruct it.
+1. Require Git and inspect repository/worktree state.
+2. Refuse to absorb unrelated dirty work into the workflow. If unrelated changes exist and cannot be safely excluded, stop and explain.
+3. Create workflow state with:
+   - workflow id;
+   - provisional destination;
+   - originating branch/worktree;
+   - delegation preferences explicitly provided by the user;
+   - status `ACTIVE`.
+4. Run routing.
+5. Auto-transition when deterministic:
+   - `TRIVIAL` → `direct`;
+   - `NORMAL + STABLE` → `grill`;
+   - `NORMAL + NEW/TRANSVERSAL` → `grill-docs`;
+   - `LARGE` → parent-level `grill-docs`.
+6. During grilling, stop for the questionnaire whenever product decisions are required.
+7. After shared understanding is confirmed, auto-run `spec` in the same session because no isolation boundary exists.
+8. If the spec is LARGE, auto-run `split` in the same planning session when no new user decision is required.
+9. Create the planning checkpoint required by `references/CHECKPOINTS.md`.
+10. Persist the next deterministic action and stop at the fresh-session implementation boundary.
 
-Every completed mode ends with:
+End with:
 
 ```text
 ## Next step
 
-<short explanation>
-<exact copy-pasteable native command, when another IDD command is required>
+Fresh implementation context required.
+Run: idd continue
 ```
 
-State when a fresh session or different model is recommended. The only successful terminal text is:
+Render the native host syntax.
+
+## `continue`
+
+Read `references/WORKFLOW.md` first.
+
+`continue` is the normal command after `start`.
+
+1. Resolve active workflow:
+   - use the named id if provided;
+   - otherwise prefer an ACTIVE workflow bound to the current branch/worktree;
+   - otherwise use the only ACTIVE workflow in this repository;
+   - if multiple plausible workflows remain, use a structured user choice when available.
+2. Reconcile workflow state with Git before acting. Never trust stale state blindly.
+3. Recompute dependencies, frontier, claims, candidate lineage, open review ledger, and fog.
+4. If exactly one valid next action exists and no boundary requires user input, execute it.
+5. If multiple frontier children are valid:
+   - with implementation delegation enabled and safe isolation available, the primary may claim and dispatch independent children;
+   - otherwise take the first frontier child in declared order unless the ordering is product-significant; ask only when a real choice matters.
+6. Stop only at:
+   - a product decision/questionnaire;
+   - an isolation boundary requiring a fresh independent session;
+   - a blocker or unsafe repository state;
+   - workflow completion.
+7. Persist state before stopping.
+
+Typical managed sequence:
 
 ```text
-## Next step
-
-IDD complete. No further IDD command is required.
+continue → implement → candidate checkpoint → stop for independent review
+continue → review → APPROVE → choose next frontier → stop for implementation
+continue → review → CHANGES REQUIRED → stop for corrective implementation
+continue → corrective implement → corrective candidate checkpoint → stop for review
 ```
 
-While an interactive questionnaire is awaiting answers, the questionnaire itself is the next step.
+## `status`
 
-### Specification and workflow state
+Read and reconcile the workflow without implementing or reviewing anything.
 
-The spec stores the behavioral contract, not execution history:
+Return:
 
 ```text
-DRAFT → material decision or contradiction remains
-READY → contract is closed and may be implemented
+Destination:
+Workflow status:
+Active spec/child:
+Frontier:
+Fog:
+Claims:
+Candidate lineage:
+Open review findings:
+Next deterministic action:
 ```
 
-Do not rewrite the spec as `IMPLEMENTED`, `CHANGES REQUIRED`, or `DONE` merely to track execution.
+Do not mutate product/code artifacts. Repair only obviously stale Git-metadata state when the correction is mechanical and evidence is conclusive; otherwise report the inconsistency.
 
-Logical workflow states are:
+# Explicit phase modes
 
-```text
-READY → IMPLEMENTED → CHANGES REQUIRED (when applicable) → DONE
-```
+## `route`
 
-A successful `implement` ends at `IMPLEMENTED`. Only an independent `review` with `APPROVE` ends at `DONE`.
-
-### Worktree-safe review handoff
-
-Review findings must survive fresh sessions. Never address Git metadata through the literal path `.git/idd/...`; `.git` is a file in linked worktrees.
-
-When Git is available, both `review` and `implement` MUST resolve the review directory exactly as follows:
-
-```sh
-REVIEW_DIR="$(git rev-parse --path-format=absolute --git-path idd/reviews)"
-SPEC_KEY="$(printf '%s' "$ACTIVE_SPEC" | git hash-object --stdin)"
-REVIEW_HANDOFF="$REVIEW_DIR/$SPEC_KEY.md"
-```
-
-Both phases must use that exact derivation. Create `REVIEW_DIR` only when a handoff must be written. The handoff lives only at `REVIEW_HANDOFF`; it must never alter the working tree, index, refs, branches, commits, or remotes.
-
-When a review returns `CHANGES REQUIRED`, persist a ledger containing at least:
-
-```text
-Spec: <exact ACTIVE_SPEC>
-Review kind: INITIAL | CORRECTIVE
-Corrective review round: <0 | 1 | 2>
-Review base and reviewed state: <base, HEAD, changed paths or diff fingerprint>
-Verdict: CHANGES REQUIRED
-
-Findings:
-- ID, severity, status OPEN, affected rule/criterion, evidence, impact,
-  location, and required correction
-
-Acceptance evidence:
-<matrix and evidence still valid for the reviewed state>
-
-Checks run:
-<commands, outcomes, and the state they apply to>
-
-Residual uncertainty:
-<remaining uncertainty>
-```
-
-`implement` must look for this ledger before general exploration. If found, it is a corrective implementation: fix the open findings, run targeted checks, and append the finding IDs addressed plus corrective evidence. Do not restart the entire implementation or reopen settled product decisions.
-
-`review` must look for the ledger before choosing its review kind. On `APPROVE`, remove the matching ledger. If Git metadata cannot be written, print the complete ledger in the response and state that persistence is unavailable.
-
-## Mode contracts
-
-### `route`
-
-Use when the needed process is unclear. Read `references/ROUTING.md`, inspect the repository only when classification depends on it, and return:
+Read `references/ROUTING.md`. Classify:
 
 ```text
 Size: TRIVIAL | NORMAL | LARGE
@@ -226,92 +280,105 @@ Reason: <brief evidence>
 Recommended flow: <workflow>
 ```
 
-Do not modify files. End with the exact command for the first mode.
+Do not modify files. In a managed workflow, auto-transition if deterministic. Otherwise return the exact next explicit command.
 
-### `direct`
+## `direct`
 
-Re-check `TRIVIAL` before editing. Schema, permissions, external contracts, concurrency, irreversible behavior, migrations, domain decisions, or meaningful ambiguity are not trivial.
+Re-check `TRIVIAL`. Schema, migrations, permissions, external contracts, concurrency, durable domain decisions, or meaningful ambiguity are not trivial.
 
-For a true trivial change: inspect the smallest relevant area, implement the localized behavior, add a narrow regression test when meaningful, and run the narrowest useful verification plus mandatory repository checks. Do not create a spec. Report files, checks, and residual risk; then end IDD.
+For a true trivial change, implement the localized behavior and narrow verification. Managed workflows may finish immediately; no candidate/review cycle is required unless repository policy or risk demands it.
 
-If not trivial, do not edit. Return the correct route and exact next command.
+If not trivial, do not edit; route upward.
 
-### `grill` and `grill-docs`
+## `grill` and `grill-docs`
 
-Read the required references and repository instructions. Build a decision tree and ask only the current frontier: unresolved decisions whose prerequisites are settled.
+Read the grilling references. Build a design tree and ask only the current decision frontier.
 
-Use a native structured questionnaire when available. Each question isolates one decision, explains the consequence, offers concrete alternatives, and puts the recommendation first. Do not ask repository facts the agent can inspect. Wait for answers before recomputing the frontier.
+When the host exposes `ask_user_question` or equivalent structured UI, MUST use it for selectable grilling questions. Put the recommended option first and label it `(Recommended)` when the tool supports that convention. Fall back to Markdown only when native interactive questioning is unavailable or fails.
 
-`grill-docs` additionally inspects and, when decisions are accepted, maintains the appropriate `CONTEXT.md`, context map, or ADR. Glossaries hold durable concepts; ADRs hold accepted hard-to-reverse decisions; neither replaces the feature spec.
+Do not delegate grilling.
+
+`grill-docs` additionally maintains canonical context and qualifying ADRs as decisions are accepted.
 
 At closure:
 
-1. summarize decisions, facts, assumptions, non-objectives, and remaining uncertainty;
-2. run the mandatory size checkpoint;
-3. ask the user to confirm shared understanding;
-4. after confirmation, end with an exact `spec` command in the same session.
+1. summarize decisions, facts, assumptions, non-goals, and residual uncertainty;
+2. re-check scale;
+3. ask the user to confirm shared understanding.
 
-Do not write code or silently run `spec`.
+In a managed workflow, confirmation auto-transitions to `spec` in the same session. In explicit mode, return the exact `spec` command.
 
-### `spec`
+## `spec`
 
-Use after confirmed grilling, normally in the same conversation. Read the specification references, repository instructions, domain context, ADRs, relevant code, tests, and existing specs.
+Read the specification references. Ground the contract in current repository behavior, domain context, ADRs, tests, schemas, and operational constraints.
 
-Write the behavioral contract to the user-supplied path or `docs/specs/<slug>.md`. Ground it in actual repository seams without embedding final code. Include objectives, non-objectives, rules, permissions, failure behavior, acceptance criteria, tests, rollout/migration needs, observability, and open blockers as applicable.
+Use only:
 
-Before setting status, run the mandatory size checkpoint:
+```text
+DRAFT
+READY
+```
 
-- unresolved material decisions → `DRAFT`, route to targeted grilling;
-- one bounded outcome → `READY`, route to fresh `implement`;
-- multiple independently verifiable outcomes → write/mark a parent spec and route to `split`.
+Before `READY`, re-check scale.
 
-Never send a flat `LARGE` spec directly to implementation.
+- unresolved material decision → `DRAFT` and targeted grilling;
+- one bounded outcome → `READY`;
+- multiple independently reviewable outcomes → parent spec and `split`.
 
-### `split`
+Do not store execution status in the spec.
 
-Require and completely read the parent spec plus `references/LARGE_WORK.md`. Create vertical, independently implementable and reviewable child specs and an index with dependencies, inherited invariants, ordering, parallelism, child state, and integrated parent criteria.
+In managed mode, auto-transition to `split` for LARGE work when deterministic, create the planning checkpoint, then stop at the fresh implementation boundary.
 
-When the user has enabled delegation for `split`, subagents may independently analyze decomposition options, dependencies, inherited invariants, delivery boundaries, and safe parallelism. Treat their work as advisory analysis: the primary agent must compare and reconcile it, and exclusively owns the final child-spec plan, child specs, index, ordering, and next-step commands.
+## `split`
 
-Do not split mechanically into frontend/backend/database unless those are genuine delivery boundaries. Do not implement. End with exact commands for the ready child or children.
+Read `references/LARGE_WORK.md` and `references/WORKFLOW.md`.
 
-### `implement`
+Create only child specs that are sharp enough now. Record unresolved but in-scope areas as workflow **fog** instead of inventing premature children.
 
-Run in a fresh session that did not materially author the spec. Resolve `ACTIVE_SPEC`; read `references/IMPLEMENTATION.md`, the complete spec and parent/index when applicable, repository instructions, context, ADRs, code, schemas, migrations, and tests.
+Each child must be vertical, independently implementable, independently reviewable, and mapped to dependencies in workflow state.
+
+When delegation is enabled for split, subagents may independently analyze decomposition/dependencies; the primary alone owns the final child plan and workflow graph.
+
+Do not implement.
+
+## `implement`
+
+Read `references/IMPLEMENTATION.md`, `references/CHECKPOINTS.md`, and active workflow state when present.
+
+Implementation must operate on exactly one reviewable unit:
+
+- NORMAL workflow → active spec;
+- LARGE workflow → exactly one claimed child, unless isolated delegated children are running in separate worktrees.
 
 Before editing:
 
 1. require `READY`;
-2. run the mandatory scale checkpoint and route a flat `LARGE` spec to `split`;
-3. resolve `REVIEW_DIR` and read a matching open ledger first;
-4. stop only for a material contradiction, unavailable dependency, or missing product decision.
+2. re-check scale;
+3. resolve any open review ledger before broad exploration;
+4. verify candidate isolation and working-tree ownership;
+5. claim the child when applicable.
 
-Choose one path:
+Initial implementation completes the bounded contract. Corrective implementation addresses only open blocking/important findings and affected seams.
 
-- **Initial implementation:** implement the complete bounded scope and its tests.
-- **Corrective implementation:** address only open blocking/important finding IDs and directly affected behavior. Preserve already-verified criteria and do not re-audit unrelated code.
+When delegation is enabled, use subagents only for isolated non-overlapping work. The primary integrates their contributions into one candidate for the active unit.
 
-When the user has enabled delegation for `implement`, use subagents only for isolated, non-overlapping implementation slices or independent supporting work. Before dispatch, define each slice's ownership, file or subsystem boundaries, inputs, expected output, dependencies, and verification responsibility. Avoid concurrent overlapping edits unless the host provides safe isolation, such as separate worktrees, and the boundaries and integration order are explicit. The primary agent must inspect and integrate every contribution, resolve cross-slice conflicts, preserve overall coherence, run integrated verification, and produce the final acceptance matrix.
+After required local verification succeeds, create the managed candidate checkpoint. A candidate must not contain another child's implementation.
 
-Use small coherent slices. Run focused and broader relevant checks during development. Defer an expensive repository-wide suite to the final stable candidate unless repository instructions explicitly require it earlier. Reuse valid evidence tied to unchanged code; do not rerun expensive checks merely because the session changed.
+Persist exact base and candidate SHAs, clear the implementation claim, set next state to independent review, and stop.
 
-Report changed behavior/files, exact checks, residual risk, and an evidence-backed acceptance matrix. A corrective report must map each finding ID to its fix and targeted verification. End at `IMPLEMENTED` with an exact fresh independent `review ACTIVE_SPEC` command.
+## `review`
 
-### `review`
+Read `references/REVIEW.md`, `references/CHECKPOINTS.md`, and workflow state when present.
 
-Run in a fresh session that did not implement the current change, preferably with a different model. Read `references/REVIEW.md`, resolve `ACTIVE_SPEC`, establish the actual diff/base, and resolve `REVIEW_DIR` before deciding scope.
+Review a stable candidate lineage, not “whatever is currently on the branch”.
 
-Choose exactly one review kind:
+- INITIAL: review exact `base..candidate` for one spec/child.
+- CORRECTIVE: review previous candidate → corrective candidate, open finding IDs, affected criteria, and regressions caused by the correction.
+- INTEGRATED PARENT: review the integrated parent range after all required children are DONE.
 
-- **INITIAL** — no open ledger exists. Review the full relevant diff on both spec fidelity and engineering quality.
-- **CORRECTIVE** — an open ledger exists. Verify only the open blocking/important findings, the corrective delta, affected criteria/invariants, and new blocking/important regressions introduced by that delta. Do not restart a full audit or actively search unrelated closed areas.
-- **INTEGRATED PARENT** — all required child workflows are `DONE`. Review cross-child behavior and the complete parent contract without reopening independently approved child internals unless integration evidence invalidates them.
+If candidate isolation cannot be proven, return `CANNOT VERIFY` or workflow recovery guidance; never run two nominal child reviews over the same mixed giant diff and pretend they are independent.
 
-When the user has enabled delegation for `review`, subagents may independently inspect distinct, explicitly assigned lenses such as spec fidelity, architecture, security/privacy, tests, or migrations/regressions. Subagent review is strictly read-only: subagents must not edit code, tests, specs, working-tree files, or the review ledger, and must not issue the authoritative verdict. The primary reviewer must validate evidence against the actual diff and spec, deduplicate and reconcile candidate findings, determine final severities, manage the ledger, and issue the single final verdict.
-
-Review is read-only except for its Git-metadata ledger. Report only evidenced findings with severity `BLOCKING`, `IMPORTANT`, or `OPTIONAL`. Optional improvements never block approval and should be listed in the final response rather than extending the correction loop. On `APPROVE`, delete the ledger; optional follow-ups are not open IDD state and become tracker work only if the user explicitly requests it.
-
-Run checks only when they add missing confidence. Reuse still-valid evidence. Once no blocking/important finding remains, run any required expensive final gate once against the stable candidate rather than on every correction round.
+Delegated review may use distinct read-only lenses. The primary validates/deduplicates findings and issues the single verdict.
 
 Allowed verdicts:
 
@@ -321,23 +388,56 @@ CHANGES REQUIRED
 CANNOT VERIFY
 ```
 
-- `APPROVE`: no blocking/important finding remains and material criteria have sufficient evidence. Remove the ledger. A standalone or integrated parent workflow becomes `DONE`.
-- `CHANGES REQUIRED`: persist/update the ledger and route to a fresh corrective `implement ACTIVE_SPEC`.
-- `CANNOT VERIFY`: identify the missing evidence, environment, access, or spec decision. Do not send work to implementation unless evidence indicates an implementation defect.
+On `APPROVE`:
 
-After at most two corrective review rounds, do not continue a blind patch loop. If blocking/important findings remain or new serious waves keep appearing, keep verdict `CHANGES REQUIRED`, set workflow state `REPLAN REQUIRED`, explain the recurring root cause, and route to targeted `grill`, `grill-docs`, or `split`. Reopen only the affected contract or slice.
+- close the candidate review in workflow state;
+- remove open review ledger;
+- mark standalone workflow or child `DONE`;
+- recompute the LARGE frontier and fog;
+- never reopen unrelated approved children.
 
-Every review ends with exactly:
+On `CHANGES REQUIRED`:
+
+- persist/update the stable finding ledger;
+- set next action to corrective implementation of the same unit.
+
+After two corrective review rounds, persistent serious findings trigger `REPLAN REQUIRED`, not another blind patch loop.
+
+# LARGE workflow invariants
+
+These rules are non-negotiable in managed LARGE workflows:
 
 ```text
-## Verdict
-<APPROVE | CHANGES REQUIRED | CANNOT VERIFY>
-
-## IDD status
-<standalone, child, or parent state>
-
-## Next step
-<exact next action and native command when applicable>
+one child
+→ one claim
+→ one candidate lineage
+→ one independent review lineage
+→ DONE
 ```
 
-For child specs, advance only dependencies unlocked by `APPROVE`. Recommend the integrated parent review only when all required children are logically `DONE`. Never reopen unrelated completed children.
+- A child cannot become DONE without `APPROVE`.
+- Dependencies unlock only from DONE children.
+- A candidate commit that mixes independently reviewable children is invalid.
+- Parallel child implementation requires isolation.
+- Approved child candidates may be integrated locally in dependency order.
+- When all required children are DONE, reconcile/graduate fog before declaring the frontier empty.
+- Only after all required children are DONE and integration is stable may IDD create/use an integration checkpoint and run the integrated parent review.
+- Parent `APPROVE` completes the workflow.
+
+# Completion
+
+A managed workflow completes only when its destination is satisfied and the required verification path is closed:
+
+```text
+TRIVIAL → verified direct change
+NORMAL  → candidate reviewed APPROVE
+LARGE   → all required children APPROVE + integrated parent review APPROVE
+```
+
+Final output:
+
+```text
+## Next step
+
+IDD complete. No further IDD command is required.
+```

@@ -1,6 +1,6 @@
-# Routing changes
+# Routing changes by size and domain impact
 
-Classify on two axes. Size determines delivery structure. Domain impact determines whether the repository's shared language or durable decisions must change.
+Classify on two axes. Size determines delivery structure. Domain impact determines whether shared language/durable decisions must change.
 
 ## Size
 
@@ -9,9 +9,9 @@ Classify on two axes. Size determines delivery structure. Domain impact determin
 Use only when all are true:
 
 - behavior is already unambiguous;
-- the change is localized and reversible;
-- no new domain concept or cross-feature rule is introduced;
-- no schema migration, permission model, external contract, concurrency rule, or rollout decision is required;
+- change is localized and reversible;
+- no new domain concept/cross-feature rule;
+- no schema migration, permission model, external contract, concurrency rule, or rollout decision;
 - verification is narrow and obvious;
 - a durable spec would cost more than the ambiguity it removes.
 
@@ -19,76 +19,62 @@ Examples: copy correction, localized validation, obvious bug fix with a known ca
 
 ### `NORMAL`
 
-Use when the work is one coherent feature or behavioral change that should fit in one implementation session after decisions are closed.
+One coherent behavior that should fit one implementation candidate and one independent review lineage after decisions are closed.
 
-Typical signals:
+Signals:
 
-- multiple files or layers are involved;
+- multiple files/layers may be involved;
 - acceptance criteria and edge cases matter;
-- behavior must be discussed before implementation;
-- data, permissions, integration, or error handling may be involved, but the work still has one clear boundary;
-- one spec can remain the source of truth.
+- behavior needs discussion;
+- data, permissions, integration, or error handling may be involved;
+- one spec remains a reliable contract;
+- one candidate commit can represent the whole implementation safely.
 
 ### `LARGE`
 
-Use when one implementation session or one flat spec would hide material independent work.
+One flat spec/candidate/review would hide material independent work.
 
-Typical signals:
+Signals:
 
-- several subsystems or deployable slices are involved;
-- multiple models or contributors can work independently;
-- rollout, migration, compatibility, or operational sequencing is substantial;
-- several user-visible capabilities need separate acceptance criteria;
-- the parent outcome is clear but delivery must be divided into child outcomes;
-- the context would become too large for reliable implementation or review.
+- several user-visible capabilities or subsystems;
+- multiple contributors can work independently;
+- substantial rollout/migration/compatibility sequencing;
+- several permission/data boundaries;
+- parent outcome is clear but delivery needs child outcomes;
+- one candidate/reviewer would repeatedly lose context;
+- independently reviewable children are likely.
 
-Do not classify purely by line count. A small diff can still be high-risk, while a broad mechanical migration can remain operationally simple.
+Do not classify by line count alone.
 
 ## Domain impact
 
 ### `STABLE`
 
-Use when the change applies terms, ownership boundaries, and durable decisions already established by `CONTEXT.md`, ADRs, code, and product language.
+Existing terms, ownership boundaries, and durable decisions are already established.
 
-Recommended grilling mode:
-
-```text
-/skill:idd grill <idea>
-```
+Use `grill` for NORMAL work.
 
 ### `NEW/TRANSVERSAL`
 
-Use when any of these is true:
+Use when a business concept is introduced/split/renamed/redefined, authority/source-of-truth shifts, real hard-to-reverse alternatives exist, terminology conflicts, or the decision shapes many future features.
 
-- a business concept is introduced, split, renamed, or redefined;
-- two people or modules use one word for different things;
-- the change establishes a source-of-truth or authority boundary;
-- a hard-to-reverse decision has real alternatives;
-- the decision will shape many future features;
-- current code and stated product language disagree;
-- another model could reasonably interpret the terms differently.
-
-Recommended grilling mode:
-
-```text
-/skill:idd grill-docs <idea>
-```
+Use `grill-docs`.
 
 ## Route matrix
 
 | Size | Stable domain | New/transversal domain |
 |---|---|---|
-| `TRIVIAL` | `direct` | Reclassify as `NORMAL` |
-| `NORMAL` | `grill → spec → implement → review` | `grill-docs → spec → implement → review` |
-| `LARGE` | `grill-docs` is still recommended at parent level | `grill-docs → parent spec → child specs → implementations → final review` |
+| `TRIVIAL` | `direct` | Reclassify as NORMAL |
+| `NORMAL` | `grill → spec → candidate → review` | `grill-docs → spec → candidate → review` |
+| `LARGE` | parent-level `grill-docs` recommended | `grill-docs → parent → split → child lineages → parent review` |
+
+In a managed `start` workflow, deterministic routing auto-transitions into the selected mode. The user should not have to copy the route's next command when no decision exists.
 
 ## Guardrails
 
-- A high-risk area is not trivial merely because the diff is small.
-- A large feature does not require `grill-docs` on every child.
-- Use `grill` for children whose domain is already settled.
-- `grill-docs` is not a fourth size category. It is the grilling variant for durable domain knowledge.
-- Classification is provisional until grilling closes and the complete contract is visible.
-- Re-check size before a spec becomes `READY` and again before implementation edits code.
-- If one flat spec contains several independently verifiable behaviors, subsystems, permission/data boundaries, or migration stages, reclassify it as `LARGE` and run `split`.
-- A change that cannot be implemented and independently reviewed reliably in one bounded cycle is operationally `LARGE`, even when its product story sounds singular.
+- High-risk is not trivial merely because diff is small.
+- LARGE does not require grill-docs on every child.
+- Use grill for children whose domain is already settled.
+- Re-check size when grilling closes, before READY, and before implementation.
+- If one flat spec contains independently reviewable behaviors, permission/data boundaries, or migration stages, route to split.
+- If a single candidate cannot be isolated and independently reviewed reliably, the work is operationally LARGE.

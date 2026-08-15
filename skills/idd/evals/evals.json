@@ -1,64 +1,110 @@
 {
   "skill_name": "idd",
+  "version": "4.0.0",
   "evals": [
     {
       "id": 1,
-      "prompt": "Run idd implement docs/specs/trainer-data.md. The READY spec has 24 acceptance criteria spanning retention policy, audited impersonation, asynchronous exports, purge notifications, migrations, and an admin UI. No child specs exist yet.",
-      "expected_output": "The agent reclassifies the flat spec as LARGE before editing and routes it to a parent/child split instead of beginning a partial implementation.",
+      "prompt": "Run idd start for: Add trainer RUT, birth date, bank data, and include trainers in exports without bank data. The repository has stable Git state and native interactive questioning.",
+      "expected_output": "IDD creates a managed workflow, routes the change, enters the appropriate grilling mode automatically, uses structured questions for product decisions, and after confirmation auto-writes the spec instead of making the user copy a spec command.",
       "expectations": [
-        "The response performs the mandatory pre-implementation scale checkpoint.",
-        "The response identifies multiple independently verifiable behavior or risk boundaries.",
-        "The response does not edit code or begin a partial implementation.",
-        "The next step preserves the exact spec path and gives an exact idd split command."
+        "A managed workflow JSON is created in the Git common metadata directory.",
+        "The workflow records a destination and domain/size classification.",
+        "Interactive structured questioning is used when available.",
+        "No subagents are used for grilling or spec.",
+        "After shared understanding, spec is generated in the same session without requiring a manual phase command.",
+        "The session stops at the fresh implementation boundary and tells the user to run idd continue."
       ]
     },
     {
       "id": 2,
-      "prompt": "Run idd implement docs/specs/trainer-data.md in a linked Git worktree. The prior review persisted a CHANGES REQUIRED handoff with findings B1 and I1 under the Git path for idd/reviews. Address the review.",
-      "expected_output": "The agent resolves the worktree-safe Git metadata path, reads the ledger before broad exploration, fixes only the open findings and affected behavior, and runs targeted verification.",
+      "prompt": "Run idd continue. The only active managed NORMAL workflow has a READY spec, a planning checkpoint, and next action IMPLEMENT. The worktree is clean.",
+      "expected_output": "IDD resolves the workflow without asking for a spec path, implements it, verifies it, creates one local candidate checkpoint, persists base/candidate SHAs, and stops for independent review.",
       "expectations": [
-        "The response resolves the directory with git rev-parse --path-format=absolute --git-path idd/reviews, derives the file deterministically from ACTIVE_SPEC, and does not assume .git is a directory.",
-        "The response treats the run as corrective implementation and reads B1 and I1 before general exploration.",
-        "The work is bounded to the open findings and directly affected seams rather than restarting the full implementation.",
-        "Verification is targeted to the findings; an expensive full suite is not repeated merely because the session is fresh.",
-        "The completion report maps B1 and I1 to fixes and evidence, then routes to a fresh corrective review of the exact spec path."
+        "The active workflow is resolved from Git metadata without user reconstruction.",
+        "The implementation uses the exact active spec stored in workflow state.",
+        "A stable local candidate commit is created only after required verification.",
+        "Unrelated changes are not staged or committed.",
+        "Workflow state records exact base and candidate SHAs and REVIEW_REQUIRED.",
+        "The only recommended fresh-session command is idd continue."
       ]
     },
     {
       "id": 3,
-      "prompt": "Run idd review docs/specs/trainer-data.md. An open review ledger says corrective review round 0, findings B1 and I1 are open, and the corrective implementation appended focused passing tests. The rest of the original diff and acceptance evidence are unchanged.",
-      "expected_output": "The agent runs corrective review round 1, verifies only the open findings, corrective delta, affected criteria, and fix-induced serious regressions, while reusing valid prior evidence.",
+      "prompt": "Run idd continue in a fresh reviewer session. The active workflow says REVIEW_REQUIRED with base abc111 and candidate def222 for docs/specs/trainer-data.md.",
+      "expected_output": "IDD performs an INITIAL independent review of exactly abc111..def222 rather than reviewing arbitrary branch state.",
       "expectations": [
-        "The review kind is CORRECTIVE round 1 rather than INITIAL.",
-        "The scope is limited to B1, I1, the corrective delta, affected criteria, and serious regressions introduced by the fix.",
-        "The response does not announce a fresh full audit of the entire original diff.",
-        "Stable finding IDs are closed or kept open with evidence.",
-        "Optional follow-ups do not block APPROVE.",
-        "Still-valid acceptance and test evidence is reused instead of automatically rerunning the full suite."
+        "The review range is exact base..candidate from workflow state.",
+        "The review covers spec fidelity and engineering quality.",
+        "No code/spec files are modified.",
+        "APPROVE marks the workflow DONE; CHANGES REQUIRED writes a ledger and routes the same unit to corrective implementation.",
+        "The next fresh-session command is idd continue when work remains."
       ]
     },
     {
       "id": 4,
-      "prompt": "Run idd review docs/specs/complex-migration.md. The handoff already records corrective review round 1. After a second correction, important findings remain and each correction has exposed another serious migration invariant failure.",
-      "expected_output": "The agent performs the bounded second corrective review, then stops the patch loop and routes the affected contract to replanning or splitting.",
+      "prompt": "A LARGE workflow has children 03 and 04. A proposed candidate commit for child 03 contains implementation files clearly belonging to both children. Run idd review for child 03.",
+      "expected_output": "IDD refuses to treat the mixed commit as an isolated child candidate and does not recommend separate duplicate reviews of the same giant diff.",
       "expectations": [
-        "The response does not route to a third blind corrective implementation cycle.",
-        "The verdict remains CHANGES REQUIRED and the logical workflow state is REPLAN REQUIRED.",
-        "The response identifies the recurring root cause rather than merely listing another wave of patches.",
-        "The next step targets only the affected contract with an exact grill, grill-docs, or split command.",
-        "Unrelated completed behavior remains closed."
+        "Candidate isolation failure is detected.",
+        "The reviewer does not APPROVE or run a fake independent child review over the mixed candidate.",
+        "The response reports recovery/replan guidance rather than reviewing child 03 and child 04 independently against the same diff.",
+        "No sibling is marked DONE without its own isolated APPROVE lineage."
       ]
     },
     {
       "id": 5,
-      "prompt": "Run idd review docs/specs/member-birth-date.md for the first time. There is no open review handoff. The implementation is a small branch diff with focused tests but the repository-wide suite is expensive.",
-      "expected_output": "The agent performs one complete initial review, persists an actionable ledger only if material findings exist, and budgets expensive verification for the stable candidate.",
+      "prompt": "Run idd continue for a LARGE workflow. Children 01-04 are DONE, child 05 is READY with all dependencies DONE, child 06 is blocked by 05, and no claims exist.",
+      "expected_output": "IDD computes frontier=[05] and proceeds deterministically to child 05 implementation without asking the user which child comes next.",
       "expectations": [
-        "The review kind is INITIAL and covers both spec fidelity and engineering quality for the full relevant diff.",
-        "The review distinguishes blocking, important, and optional findings, and optional items do not block approval.",
-        "If changes are required, the handoff is stored under the path resolved by git rev-parse --git-path rather than literal .git/idd.",
-        "The response does not run the expensive repository-wide suite repeatedly without a material evidence gap.",
-        "The response ends with exactly one verdict and an exact next step using the active spec path."
+        "Frontier is computed from dependencies and state rather than a stale README next-step line.",
+        "Child 05 is claimed before implementation.",
+        "Child 06 is not selected while blocked.",
+        "The user is not asked a ceremonial choice when there is exactly one frontier child."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Run idd continue for a LARGE workflow with two READY independent frontier children. The user previously enabled subagents for implementation and the host supports isolated worktrees.",
+      "expected_output": "IDD may claim both children and dispatch isolated implementations in separate worktrees/branches, keeping one candidate lineage per child.",
+      "expectations": [
+        "Delegation preference is read from persisted workflow state.",
+        "Each child gets an explicit claim and base SHA.",
+        "Concurrent child edits do not share an overlapping working tree.",
+        "Each child produces its own candidate commit and later review lineage.",
+        "The primary agent owns integration and workflow state."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Run idd continue after a child APPROVE. Workflow fog contains 'final onboarding integration after CLI contract is stable'. The approved child now makes that outcome precise without requiring a new product decision.",
+      "expected_output": "IDD reevaluates fog and graduates the newly sharp in-scope outcome into a child instead of prematurely declaring the workflow complete.",
+      "expectations": [
+        "Fog is reevaluated after child approval.",
+        "A newly precise required outcome becomes a child with dependencies.",
+        "No user question is asked when the child boundary is deterministic from approved contracts and repository facts.",
+        "Parent review is not recommended until the new required child is DONE."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Run idd continue after an INITIAL review returned CHANGES REQUIRED for candidate def222. The ledger has B1 and I1 open. A fresh implementation session is starting.",
+      "expected_output": "IDD automatically enters corrective implementation for the same unit, fixes only B1/I1 and affected seams, creates a corrective candidate commit, and stops for corrective review.",
+      "expectations": [
+        "No spec path or finding text needs to be pasted by the user.",
+        "The open ledger is read before broad exploration.",
+        "Corrective implementation is scoped to material open findings.",
+        "The corrective candidate lineage records previous candidate and new SHA.",
+        "The next command at the isolation boundary is idd continue."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Run idd status. The child spec README says child 03 and 04 are next, but workflow state says 03 DONE, 04 DONE, 05 READY; Git candidate/review evidence agrees with workflow state.",
+      "expected_output": "IDD reports workflow state as authoritative, identifies the README progress prose as stale non-authoritative duplication, and shows child 05 as next deterministic action.",
+      "expectations": [
+        "Dynamic execution truth comes from reconciled workflow/Git evidence, not README prose.",
+        "No approved child is reopened merely because README is stale.",
+        "Status displays destination, frontier, candidates, and next action clearly."
       ]
     }
   ]

@@ -1,6 +1,7 @@
 # PRD — <Feature name>
 
 - **Status:** DRAFT | READY
+- **Destination:** <one or two lines describing successful completion for this contract/workflow>
 - **Owner:** <name or TBD>
 - **Created:** YYYY-MM-DD
 - **Size:** NORMAL | LARGE-PARENT | LARGE-CHILD
