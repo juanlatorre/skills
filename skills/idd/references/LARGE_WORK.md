@@ -2,7 +2,7 @@
 
 A parent spec explains the complete outcome and cross-cutting contract. Child specs are sharp, independently implementable and independently reviewable outcomes toward that destination.
 
-IDD 4 does not require the whole future to be known before work begins. It distinguishes **children** from **fog** and computes a live **frontier** from dependencies and claims.
+IDD 4.x does not require the whole future to be known before work begins. It distinguishes **children** from **fog** and computes a live **frontier** from dependencies and claims.
 
 ## Parent responsibilities
 
@@ -145,6 +145,20 @@ After the parent domain is settled:
 - use `grill-docs` only when a child introduces a genuinely new/transversal concept or changes a durable decision.
 
 Do not re-grill already settled parent decisions.
+
+## Issue-backed projection
+
+When managed delivery disposition is `ISSUES`, the tracker is a visible projection of the approved child map, not another source of specification truth.
+
+- create one parent/index issue for the destination;
+- create one child issue per sharp child spec;
+- prefer native parent/child and dependency relationships;
+- point each issue to its spec instead of copying the spec body;
+- do not create issues for fog;
+- when fog later graduates deterministically into a child, create the child spec first and then its thin issue;
+- starting one issue authorizes delivery of that issue only; approval does not auto-start siblings.
+
+See `ISSUES.md` for the full contract.
 
 ## Integration and completion
 

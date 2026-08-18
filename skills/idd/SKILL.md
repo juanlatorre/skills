@@ -1,26 +1,33 @@
 ---
 name: idd
-description: "Inshallah Driven Development (IDD), a stateful software-delivery workflow for turning ideas into verified code. IDD routes scope, grills decisions, preserves domain language and ADRs, writes repository-grounded specs, splits large work, implements isolated candidates, reviews them independently, and can resume deterministically with start/continue. Modes: start, continue, status, route, direct, grill, grill-docs, spec, split, implement, and review."
+description: "Inshallah Driven Development (IDD), a stateful software-delivery workflow for turning ideas, specs, or issues into verified code or an issue-backed delivery plan. IDD routes scope, grills decisions, preserves domain language and ADRs, writes repository-grounded specs, splits large work, can publish approved work as issues, implements isolated candidates, reviews them independently, and resumes deterministically with start/continue. Modes: start, continue, status, route, direct, grill, grill-docs, spec, split, implement, and review."
 license: MIT. Adapted third-party portions are documented in THIRD_PARTY_NOTICES.md.
-compatibility: Requires an Agent Skills-compatible coding agent with repository filesystem access. Managed start/continue workflows additionally require Git for durable local workflow state and candidate checkpoints.
+compatibility: Requires an Agent Skills-compatible coding agent with repository filesystem access. Managed start/continue workflows additionally require Git for durable local workflow state and candidate checkpoints. ISSUE delivery additionally requires access to a configured issue tracker for remote issue creation.
 disable-model-invocation: true
 metadata:
   author: juanlatorre
-  version: "4.0.0"
+  version: "4.1.0"
 ---
 
 # IDD — Inshallah Driven Development
 
-IDD turns an idea into a verified candidate while keeping the workflow itself explicit, durable, and resumable.
+IDD turns an idea, approved spec, or planned issue into a verified candidate while keeping workflow state explicit, durable, and resumable.
 
-Version 4 introduces a managed workflow map inspired by wayfinding concepts: **destination, frontier, fog, claims, candidate lineage, and deterministic continuation**.
+Version 4.1 adds a two-way delivery disposition once executable work exists:
+
+```text
+EXECUTE → deliver now through implementation + independent review
+ISSUES  → publish the approved plan as thin tracker issues and park execution
+```
+
+There is no third disposition.
 
 ## Invocation
 
 IDD is explicit. If the user did not request `idd`, `Inshallah Driven Development`, or one of these modes, show the modes and stop:
 
 ```text
-idd start <change or idea>
+idd start <idea | spec path | issue ref/url>
 idd continue [workflow id]
 idd status [workflow id]
 idd route <change or idea>
@@ -45,54 +52,74 @@ Codex:       $idd <mode> <arguments>, or select idd through /skills
 
 Otherwise use host-neutral notation and label it.
 
-## Two ways to use IDD
-
-### Managed workflow — recommended
-
-Use `start` once, then `continue` from fresh sessions:
+## Normal managed UX
 
 ```text
 idd start <idea>
-→ decisions when required
-→ deterministic steps auto-advance
-→ fresh-session boundary
-
-idd continue
-→ next deterministic action
-→ fresh-session boundary
-
-idd continue
-→ ...
+→ route
+→ grill / grill-docs when needed
+→ spec
+→ split when LARGE
+→ EXECUTE or ISSUES
 ```
 
-The user should not need to remember spec paths, child numbers, review bases, candidate SHAs, or which phase comes next.
+### EXECUTE
 
-### Explicit modes — advanced / compatibility
+```text
+planning
+→ fresh implementation
+→ candidate checkpoint
+→ fresh independent review
+→ correction loop when needed
+→ DONE
+```
 
-The individual modes remain available. They perform one bounded phase and return an exact next step, but they do not provide all managed-workflow guarantees unless an active workflow exists.
+After planning, fresh sessions normally need only:
+
+```text
+idd continue
+```
+
+### ISSUES
+
+```text
+planning
+→ publish thin issues pointing to approved specs
+→ PLANNED / parked
+→ stop
+```
+
+Later:
+
+```text
+idd start <issue ref/url>
+```
+
+Once that issue is actively being delivered, fresh sessions use `idd continue` until the issue reaches `APPROVE` or another real boundary.
 
 ## Core contracts
 
 1. Use the user's language and preserve canonical repository terms.
 2. Read applicable `AGENTS.md` and repository instructions before changing files.
-3. Resolve bundled references relative to this skill directory.
-4. Load only references required by the current action.
-5. Product decisions belong to the user; repository facts belong to the agent to investigate.
-6. Never invent permissions, domain meaning, failure behavior, acceptance criteria, or product rules.
-7. Never claim evidence, commands, tests, or criteria that were not actually verified.
-8. Never push, open a pull request, merge, publish, release, deploy, tag, or mutate remote state unless explicitly requested.
-9. Managed workflow checkpoint commits are local workflow mechanics, not delivery authorization. See `references/CHECKPOINTS.md`.
+3. Resolve bundled references relative to this skill directory and load only those needed for the current action.
+4. Product decisions belong to the user; repository facts belong to the agent to investigate.
+5. Never invent permissions, domain meaning, failure behavior, acceptance criteria, or product rules.
+6. Never claim evidence, commands, tests, or criteria that were not actually verified.
+7. Never push, open a pull request, merge, publish, release, deploy, tag, or mutate remote Git state unless explicitly requested.
+8. Managed checkpoint commits are local workflow mechanics, not delivery authorization. See `references/CHECKPOINTS.md`.
+9. Selecting `ISSUES` authorizes issue creation/relationship wiring for the current approved plan only. Starting an existing issue authorizes lifecycle updates only for that issue and directly related tracker metadata. See `references/ISSUES.md`.
 10. Review is independent and read-only with respect to product/code artifacts; only Git-metadata workflow/review state may be written.
-11. Specs store behavioral contracts only: `DRAFT` or `READY`. Execution status belongs to workflow state.
-12. Every child in LARGE work has exactly one candidate lineage and one review lineage. Do not mix independently reviewable children into one candidate.
-13. Do not silently cross a **decision boundary**, **isolation boundary**, **safety boundary**, or **blocker**.
-14. IDD MAY auto-transition when exactly one valid next action exists, no user decision is required, no independent context is required, and the transition adds no unapproved external side effect.
-15. Every completed action ends with `## Next step`. In managed workflows the preferred command is usually `idd continue`.
+11. Specs store behavioral contracts only: `DRAFT` or `READY`. Execution/tracker state belongs to workflow state.
+12. Every LARGE child has one candidate lineage and one review lineage. Never mix independently reviewable children into one candidate.
+13. Do not silently cross a decision, delivery-disposition, isolation, safety, or blocker boundary.
+14. IDD MAY auto-transition when exactly one valid next action exists, no user decision is required, no independent context is required, and no unapproved side effect is introduced.
+15. Every completed action ends with `## Next step`. In active EXECUTE lineages the preferred command is usually `idd continue`.
 
 ## Required references
 
 - managed state / `start` / `continue` / `status`: [workflow](references/WORKFLOW.md)
-- managed commits and candidate isolation: [checkpoints](references/CHECKPOINTS.md)
+- issue planning/resume: [issues](references/ISSUES.md)
+- managed commits/candidate isolation: [checkpoints](references/CHECKPOINTS.md)
 - `route`, `direct`: [routing](references/ROUTING.md)
 - `grill`: [grilling](references/GRILLING.md)
 - `grill-docs`: [grilling](references/GRILLING.md), [domain modeling](references/DOMAIN_MODELING.md), [context format](references/CONTEXT_FORMAT.md), [ADR format](references/ADR_FORMAT.md)
@@ -101,49 +128,66 @@ The individual modes remain available. They perform one bounded phase and return
 - `implement`: [implementation](references/IMPLEMENTATION.md), [checkpoints](references/CHECKPOINTS.md)
 - `review`: [review](references/REVIEW.md), [checkpoints](references/CHECKPOINTS.md)
 
-## Managed workflow state
+## Operational source of truth
 
-Managed workflows require Git. Resolve shared metadata through the common Git directory, never a literal `.git/` path:
+Managed workflows require Git. Resolve metadata through the common Git directory as defined in `WORKFLOW.md`.
 
-```sh
-GIT_COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
-IDD_DIR="$GIT_COMMON_DIR/idd"
-WORKFLOW_DIR="$IDD_DIR/workflows"
-REVIEW_DIR="$IDD_DIR/reviews"
-```
-
-The workflow JSON in `WORKFLOW_DIR` is the **single operational source of truth**.
-
-Other artifacts have one responsibility each:
+Responsibilities are intentionally separate:
 
 ```text
 spec / child spec     → approved behavioral contract
 CONTEXT.md / ADR      → durable domain knowledge and decisions
-workflow JSON         → execution state, dependencies, claims, candidates, next action
-Git commits           → exact candidate states
+workflow JSON         → delivery disposition, execution state, dependencies, claims, candidates, issue refs, next action
+Git commits           → exact planning/candidate states
 review ledger         → currently open review findings
+issue tracker         → visible planned/assigned delivery units pointing back to specs
 ```
 
-Do not store dynamic execution state such as `DONE`, `next child`, candidate SHA, or review verdict in specs or hand-maintained README prose.
+Do not hand-maintain dynamic progress such as `DONE`, “next child”, candidate SHA, or review verdict in specs/README prose.
+
+## Delivery disposition
+
+When executable `READY` work first exists, managed workflows must resolve exactly one of:
+
+```text
+EXECUTE
+ISSUES
+```
+
+If the user's natural-language request already chose one, persist it and do not ask again. Otherwise ask once, preferably with native structured UI:
+
+```text
+How do you want to continue?
+
+1. Execute now
+2. Take it to issues
+```
+
+Do not invent a third formal option.
+
+- EXECUTE → create the planning checkpoint and stop at the fresh implementation boundary.
+- ISSUES → create the planning checkpoint, publish the approved plan according to `ISSUES.md`, set workflow `PLANNED`, and stop.
+
+A parked ISSUES workflow never auto-starts backlog work through `continue`; resume one unit explicitly with `idd start <issue>`.
 
 ## Destination, frontier, fog, and claims
 
-Every managed workflow has a **destination**: one or two lines describing what successful completion means.
+Every managed workflow has a **destination**: the low-resolution definition of success.
 
 For LARGE work:
 
-- **children** are sharp, independently implementable/reviewable outcomes;
-- **frontier** is computed, not manually stored: READY children whose dependencies are DONE and which are not actively claimed;
-- **fog** contains in-scope work that is visible but not yet precise enough to become a child;
-- **claims** prevent two sessions/worktrees from implementing the same child.
+- **children** are sharp independently implementable/reviewable outcomes;
+- **frontier** is computed from READY + dependency + claim state;
+- **fog** is in-scope work not yet sharp enough to become a child;
+- **claims** prevent duplicate implementation.
 
-Never invent a complete child graph just to eliminate fog. Re-evaluate fog as approved children reveal more of the path.
+Never invent children just to eliminate fog. Re-evaluate fog as approved work reveals more of the path.
 
 ## Optional subagent delegation
 
 IDD is single-agent by default. Delegation is opt-in and allowed only for `split`, `implement`, and `review`. Never delegate `route`, `direct`, `grill`, `grill-docs`, or `spec`.
 
-User controls include:
+Examples:
 
 ```text
 Use subagents for this implementation.
@@ -152,16 +196,15 @@ Use subagents for this workflow.
 Do not use subagents.
 ```
 
-Persist delegation preferences in managed workflow state so fresh sessions retain them.
+Persist delegation preferences in managed workflow state.
 
-When delegation is enabled:
+When enabled:
 
-1. the primary agent owns workflow state and final conclusions;
-2. subagents receive explicit scope, inputs, boundaries, and expected output;
-3. subagent output is candidate evidence/work, never self-validating;
-4. if host delegation is unavailable, continue single-agent and state that fact;
-5. implementation subagents must use isolated non-overlapping work, preferably separate worktrees/branches when editing concurrently;
-6. review subagents are read-only and never issue the authoritative verdict.
+1. the primary owns workflow state and final conclusions;
+2. subagents receive explicit scope/boundaries/expected output;
+3. implementation editing must be isolated and non-overlapping, preferably worktrees/branches;
+4. review subagents are read-only and never issue the authoritative verdict;
+5. if the host lacks delegation, continue single-agent and state that fact.
 
 ## Mandatory scale checkpoints
 
@@ -171,91 +214,71 @@ Classify during routing, then re-check:
 2. before a spec becomes `READY`;
 3. before implementation edits code.
 
-Reclassify to `LARGE` when one bounded implementation/review cycle would hide independently verifiable behaviors, permission/data boundaries, rollout/migration stages, or too much context.
-
 A flat `LARGE` spec must not be implemented. Route it to parent + `split`.
 
 # Managed modes
 
 ## `start`
 
-Read `references/WORKFLOW.md` first.
+Read `WORKFLOW.md` and `ISSUES.md` first.
 
-`start` creates a managed workflow and auto-advances until the first real boundary.
+`start` accepts an **idea**, **READY spec**, or **issue ref/URL**.
 
-1. Require Git and inspect repository/worktree state.
-2. Refuse to absorb unrelated dirty work into the workflow. If unrelated changes exist and cannot be safely excluded, stop and explain.
-3. Create workflow state with:
-   - workflow id;
-   - provisional destination;
-   - originating branch/worktree;
-   - delegation preferences explicitly provided by the user;
-   - status `ACTIVE`.
-4. Run routing.
-5. Auto-transition when deterministic:
-   - `TRIVIAL` → `direct`;
-   - `NORMAL + STABLE` → `grill`;
-   - `NORMAL + NEW/TRANSVERSAL` → `grill-docs`;
-   - `LARGE` → parent-level `grill-docs`.
-6. During grilling, stop for the questionnaire whenever product decisions are required.
-7. After shared understanding is confirmed, auto-run `spec` in the same session because no isolation boundary exists.
-8. If the spec is LARGE, auto-run `split` in the same planning session when no new user decision is required.
-9. Create the planning checkpoint required by `references/CHECKPOINTS.md`.
-10. Persist the next deterministic action and stop at the fresh-session implementation boundary.
+### Idea
 
-End with:
+1. Require Git and safe working-tree ownership.
+2. Create managed workflow state with provisional destination, origin, explicit delegation preferences, and any delivery intent already stated by the user.
+3. Route and auto-enter `direct`, `grill`, or `grill-docs` as appropriate.
+4. Stop for real product questions; use native structured questioning when available.
+5. After shared understanding, auto-run `spec` in the same planning session.
+6. Auto-run `split` for LARGE when deterministic.
+7. When READY executable work exists, resolve EXECUTE vs ISSUES.
+8. EXECUTE → planning checkpoint → persist next action → stop for fresh implementation.
+9. ISSUES → planning checkpoint → publish issues → `PLANNED` → stop.
 
-```text
-## Next step
+### Spec
 
-Fresh implementation context required.
-Run: idd continue
-```
+1. Resolve/read spec, parent/index, context, and ADRs.
+2. Require `READY`; otherwise route to the missing definition work.
+3. Re-check scale and split when required.
+4. Resolve EXECUTE vs ISSUES if unset.
+5. Proceed using the selected disposition.
 
-Render the native host syntax.
+### Issue
+
+Follow `ISSUES.md`.
+
+- IDD-created issue → locate workflow/spec, verify dependencies, claim it when supported, make it the active unit, and execute it without asking disposition again.
+- parent/index issue → choose the next executable child only when appropriate, or enter integrated completion when children are DONE.
+- ordinary unmarked issue → treat its body as the incoming change request, record it as origin, set disposition EXECUTE, then route/grill/spec as needed.
+
+Because `start <issue>` is already a fresh delivery session, it may enter implementation immediately when the linked spec is READY.
+
+At later isolation boundaries, persist state and end with native `idd continue`.
 
 ## `continue`
 
-Read `references/WORKFLOW.md` first.
+Read `WORKFLOW.md` and `ISSUES.md` first.
 
-`continue` is the normal command after `start`.
-
-1. Resolve active workflow:
-   - use the named id if provided;
-   - otherwise prefer an ACTIVE workflow bound to the current branch/worktree;
-   - otherwise use the only ACTIVE workflow in this repository;
-   - if multiple plausible workflows remain, use a structured user choice when available.
-2. Reconcile workflow state with Git before acting. Never trust stale state blindly.
-3. Recompute dependencies, frontier, claims, candidate lineage, open review ledger, and fog.
-4. If exactly one valid next action exists and no boundary requires user input, execute it.
-5. If multiple frontier children are valid:
-   - with implementation delegation enabled and safe isolation available, the primary may claim and dispatch independent children;
-   - otherwise take the first frontier child in declared order unless the ordering is product-significant; ask only when a real choice matters.
-6. Stop only at:
-   - a product decision/questionnaire;
-   - an isolation boundary requiring a fresh independent session;
-   - a blocker or unsafe repository state;
-   - workflow completion.
-7. Persist state before stopping.
-
-Typical managed sequence:
-
-```text
-continue → implement → candidate checkpoint → stop for independent review
-continue → review → APPROVE → choose next frontier → stop for implementation
-continue → review → CHANGES REQUIRED → stop for corrective implementation
-continue → corrective implement → corrective candidate checkpoint → stop for review
-```
+1. Resolve and reconcile the active workflow against Git, claims, candidate lineage, review ledger, fog, and tracker state when applicable.
+2. EXECUTE disposition → run the one deterministic safe action until the next boundary.
+3. ISSUES disposition + active issue → continue only that issue's lineage.
+4. ISSUES disposition + `PLANNED` + no active issue → do **not** start backlog work. Report executable issue refs and remain parked.
+5. Stop only at a decision, disposition choice, isolation boundary, blocker/unsafe state, park boundary, or completion.
+6. Persist state before stopping.
 
 ## `status`
 
-Read and reconcile the workflow without implementing or reviewing anything.
+Read/reconcile workflow state without implementing, reviewing, or creating issues.
 
 Return:
 
 ```text
 Destination:
 Workflow status:
+Delivery disposition:
+Tracker / planned issues:
+Active issue:
 Active spec/child:
 Frontier:
 Fog:
@@ -265,120 +288,68 @@ Open review findings:
 Next deterministic action:
 ```
 
-Do not mutate product/code artifacts. Repair only obviously stale Git-metadata state when the correction is mechanical and evidence is conclusive; otherwise report the inconsistency.
-
 # Explicit phase modes
 
 ## `route`
 
-Read `references/ROUTING.md`. Classify:
-
-```text
-Size: TRIVIAL | NORMAL | LARGE
-Domain impact: STABLE | NEW/TRANSVERSAL
-Reason: <brief evidence>
-Recommended flow: <workflow>
-```
-
-Do not modify files. In a managed workflow, auto-transition if deterministic. Otherwise return the exact next explicit command.
+Read `ROUTING.md`. Classify size + domain impact. Do not modify files. In managed mode, auto-transition when deterministic.
 
 ## `direct`
 
-Re-check `TRIVIAL`. Schema, migrations, permissions, external contracts, concurrency, durable domain decisions, or meaningful ambiguity are not trivial.
+Re-check `TRIVIAL` before editing. Schema/migrations/permissions/external contracts/concurrency/domain decisions/meaningful ambiguity are not trivial.
 
-For a true trivial change, implement the localized behavior and narrow verification. Managed workflows may finish immediately; no candidate/review cycle is required unless repository policy or risk demands it.
-
-If not trivial, do not edit; route upward.
+- EXECUTE → implement localized behavior + focused verification; finish unless repository risk requires review.
+- ISSUES → do not implement; publish one thin issue for the bounded change and park.
 
 ## `grill` and `grill-docs`
 
-Read the grilling references. Build a design tree and ask only the current decision frontier.
+Read grilling references. Ask only the current decision frontier. MUST use `ask_user_question` or equivalent structured UI when available; fall back to Markdown only when unavailable/failing. Do not delegate grilling.
 
-When the host exposes `ask_user_question` or equivalent structured UI, MUST use it for selectable grilling questions. Put the recommended option first and label it `(Recommended)` when the tool supports that convention. Fall back to Markdown only when native interactive questioning is unavailable or fails.
+`grill-docs` additionally maintains canonical context and qualifying ADRs.
 
-Do not delegate grilling.
-
-`grill-docs` additionally maintains canonical context and qualifying ADRs as decisions are accepted.
-
-At closure:
-
-1. summarize decisions, facts, assumptions, non-goals, and residual uncertainty;
-2. re-check scale;
-3. ask the user to confirm shared understanding.
-
-In a managed workflow, confirmation auto-transitions to `spec` in the same session. In explicit mode, return the exact `spec` command.
+At closure: summarize, re-check scale, ask for confirmation. Managed mode auto-runs `spec` after confirmation; explicit mode returns the exact spec command.
 
 ## `spec`
 
-Read the specification references. Ground the contract in current repository behavior, domain context, ADRs, tests, schemas, and operational constraints.
+Ground the contract in repository behavior/context/ADRs/tests/schemas. Use only `DRAFT` or `READY`. Re-check scale before READY.
 
-Use only:
+- unresolved material decision → DRAFT + targeted grilling;
+- one bounded outcome → READY;
+- several independently reviewable outcomes → parent + split.
 
-```text
-DRAFT
-READY
-```
-
-Before `READY`, re-check scale.
-
-- unresolved material decision → `DRAFT` and targeted grilling;
-- one bounded outcome → `READY`;
-- multiple independently reviewable outcomes → parent spec and `split`.
-
-Do not store execution status in the spec.
-
-In managed mode, auto-transition to `split` for LARGE work when deterministic, create the planning checkpoint, then stop at the fresh implementation boundary.
+Do not store execution/tracker state in specs. Managed mode resolves delivery disposition before implementation.
 
 ## `split`
 
-Read `references/LARGE_WORK.md` and `references/WORKFLOW.md`.
+Read `LARGE_WORK.md`, `WORKFLOW.md`, and `ISSUES.md`.
 
-Create only child specs that are sharp enough now. Record unresolved but in-scope areas as workflow **fog** instead of inventing premature children.
+Create only sharp vertical children; keep unresolved in-scope areas as fog. Record dependencies in workflow state. Optional split subagents may analyze; the primary owns final children/graph.
 
-Each child must be vertical, independently implementable, independently reviewable, and mapped to dependencies in workflow state.
-
-When delegation is enabled for split, subagents may independently analyze decomposition/dependencies; the primary alone owns the final child plan and workflow graph.
-
-Do not implement.
+Do not implement. In ISSUES disposition, only sharp child specs become issues; fog does not.
 
 ## `implement`
 
-Read `references/IMPLEMENTATION.md`, `references/CHECKPOINTS.md`, and active workflow state when present.
+Read `IMPLEMENTATION.md`, `CHECKPOINTS.md`, and workflow state.
 
-Implementation must operate on exactly one reviewable unit:
+Operate on exactly one reviewable unit:
 
-- NORMAL workflow → active spec;
-- LARGE workflow → exactly one claimed child, unless isolated delegated children are running in separate worktrees.
+- NORMAL EXECUTE → active spec;
+- LARGE EXECUTE → one claimed child unless isolated delegated children run in separate worktrees;
+- ISSUES → exactly the explicitly started/claimed issue's linked spec/child.
 
-Before editing:
-
-1. require `READY`;
-2. re-check scale;
-3. resolve any open review ledger before broad exploration;
-4. verify candidate isolation and working-tree ownership;
-5. claim the child when applicable.
-
-Initial implementation completes the bounded contract. Corrective implementation addresses only open blocking/important findings and affected seams.
-
-When delegation is enabled, use subagents only for isolated non-overlapping work. The primary integrates their contributions into one candidate for the active unit.
-
-After required local verification succeeds, create the managed candidate checkpoint. A candidate must not contain another child's implementation.
-
-Persist exact base and candidate SHAs, clear the implementation claim, set next state to independent review, and stop.
+Require READY, re-check scale, read open review ledger first when corrective, verify ownership/candidate isolation, then implement. After required local verification, create the managed candidate checkpoint, persist exact base/candidate SHAs, clear implementation claim, set REVIEW_REQUIRED, and stop.
 
 ## `review`
 
-Read `references/REVIEW.md`, `references/CHECKPOINTS.md`, and workflow state when present.
+Read `REVIEW.md`, `CHECKPOINTS.md`, and workflow state.
 
-Review a stable candidate lineage, not “whatever is currently on the branch”.
+Review stable candidate lineage only:
 
-- INITIAL: review exact `base..candidate` for one spec/child.
-- CORRECTIVE: review previous candidate → corrective candidate, open finding IDs, affected criteria, and regressions caused by the correction.
-- INTEGRATED PARENT: review the integrated parent range after all required children are DONE.
+- INITIAL → exact `base..candidate`;
+- CORRECTIVE → previous candidate..corrective candidate + open findings/affected criteria;
+- INTEGRATED PARENT → stable integrated parent candidate after required children DONE.
 
-If candidate isolation cannot be proven, return `CANNOT VERIFY` or workflow recovery guidance; never run two nominal child reviews over the same mixed giant diff and pretend they are independent.
-
-Delegated review may use distinct read-only lenses. The primary validates/deduplicates findings and issues the single verdict.
+Candidate isolation failure is not a reason to run duplicate giant reviews; return recovery/CANNOT VERIFY guidance.
 
 Allowed verdicts:
 
@@ -388,24 +359,13 @@ CHANGES REQUIRED
 CANNOT VERIFY
 ```
 
-On `APPROVE`:
+On APPROVE: record candidate approval, clear ledger, mark active unit DONE, recompute frontier/fog, never reopen unrelated approved children. In issue-driven delivery, complete/close the active issue when permitted and clear it. NORMAL ISSUES becomes DONE; LARGE ISSUES returns to PLANNED after a child approval until final parent integration is explicitly started.
 
-- close the candidate review in workflow state;
-- remove open review ledger;
-- mark standalone workflow or child `DONE`;
-- recompute the LARGE frontier and fog;
-- never reopen unrelated approved children.
+On CHANGES_REQUIRED: persist/update ledger and keep the same unit/issue active for corrective implementation.
 
-On `CHANGES REQUIRED`:
+After two corrective review rounds, persistent serious findings trigger `REPLAN_REQUIRED` instead of a blind patch loop.
 
-- persist/update the stable finding ledger;
-- set next action to corrective implementation of the same unit.
-
-After two corrective review rounds, persistent serious findings trigger `REPLAN REQUIRED`, not another blind patch loop.
-
-# LARGE workflow invariants
-
-These rules are non-negotiable in managed LARGE workflows:
+# LARGE invariants
 
 ```text
 one child
@@ -415,26 +375,23 @@ one child
 → DONE
 ```
 
-- A child cannot become DONE without `APPROVE`.
 - Dependencies unlock only from DONE children.
-- A candidate commit that mixes independently reviewable children is invalid.
-- Parallel child implementation requires isolation.
-- Approved child candidates may be integrated locally in dependency order.
-- When all required children are DONE, reconcile/graduate fog before declaring the frontier empty.
-- Only after all required children are DONE and integration is stable may IDD create/use an integration checkpoint and run the integrated parent review.
-- Parent `APPROVE` completes the workflow.
+- Mixed child candidates are invalid.
+- Parallel implementation requires isolation.
+- Approved children remain closed.
+- EXECUTE may proceed through deterministic frontier choices after isolation boundaries.
+- ISSUES never auto-starts another backlog child; use `idd start <issue>`.
+- Reconcile/graduate fog before final parent review.
+- Parent APPROVE completes the workflow.
 
 # Completion
 
-A managed workflow completes only when its destination is satisfied and the required verification path is closed:
-
 ```text
-TRIVIAL → verified direct change
-NORMAL  → candidate reviewed APPROVE
-LARGE   → all required children APPROVE + integrated parent review APPROVE
+PLANNED → approved work exists as tracker issues; execution intentionally parked
+DONE    → destination delivered and required independent verification closed
 ```
 
-Final output:
+Final delivery output:
 
 ```text
 ## Next step

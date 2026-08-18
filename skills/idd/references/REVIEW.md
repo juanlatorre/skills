@@ -1,6 +1,6 @@
 # Reviewing an implementation against its spec
 
-Review is independent, read-only, evidence-driven, and designed to converge. In IDD 4 managed workflows, review evaluates an exact candidate lineage rather than “whatever is on the branch”.
+Review is independent, read-only, evidence-driven, and designed to converge. In IDD 4.x managed workflows, review evaluates an exact candidate lineage rather than “whatever is on the branch”.
 
 ## Independence
 
@@ -175,6 +175,8 @@ Managed effects:
 - recompute LARGE dependencies/frontier;
 - reevaluate fog after child approval;
 - never reopen unrelated DONE children.
+- in issue-driven delivery, complete/close the active issue when the tracker convention permits, clear the active issue/claim, and return the workflow to PLANNED unless the full destination is DONE;
+- never auto-start another backlog issue in ISSUES disposition.
 
 ### CHANGES REQUIRED
 

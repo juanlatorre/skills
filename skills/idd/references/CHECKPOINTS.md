@@ -1,6 +1,6 @@
 # Managed checkpoint commits and candidate isolation
 
-IDD 4 managed workflows use local Git commits as stable checkpoints. These commits make implementation and review reproducible across sessions and prevent two child specs from being reviewed against the same ambiguous working-tree diff.
+IDD 4.x managed workflows use local Git commits as stable checkpoints. These commits make implementation and review reproducible across sessions and prevent two child specs from being reviewed against the same ambiguous working-tree diff.
 
 Explicit legacy phase modes remain commit-free unless the user requests commits or they are attached to an active managed workflow.
 
@@ -69,6 +69,8 @@ Include only planning artifacts produced or intentionally updated by the workflo
 Do not include implementation code.
 
 Record the SHA as `planningCheckpoint` in workflow state.
+
+For `ISSUES` disposition, create this planning checkpoint **before** publishing tracker issues. Issue bodies should point to the stable spec paths/planning state. This checkpoint does not authorize pushing the planning commit; remote Git publication remains separate.
 
 ## Candidate lineage
 

@@ -1,6 +1,6 @@
 {
   "skill_name": "idd",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "evals": [
     {
       "id": 1,
@@ -105,6 +105,66 @@
         "Dynamic execution truth comes from reconciled workflow/Git evidence, not README prose.",
         "No approved child is reopened merely because README is stale.",
         "Status displays destination, frontier, candidates, and next action clearly."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Run idd start for a NORMAL feature. Grilling is complete, the spec is READY, and the user has not said whether to implement now or create issues. Native structured questioning is available.",
+      "expected_output": "IDD asks exactly one two-option delivery question: EXECUTE or ISSUES, with no third formal disposition.",
+      "expectations": [
+        "The delivery question appears only after executable READY work exists.",
+        "Exactly two choices are offered: execute now or take it to issues.",
+        "No spec-only/later/park third option is invented.",
+        "The selected disposition is persisted in workflow state and is not asked again."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Run idd start for a NORMAL READY feature where the user already said: 'Llévalo a issues, no implementes'. A writable GitHub Issues integration is available.",
+      "expected_output": "IDD skips the delivery question, creates the planning checkpoint, publishes one thin issue pointing to the spec, marks the workflow PLANNED, and does not implement code.",
+      "expectations": [
+        "Natural-language ISSUES intent is recognized without asking again.",
+        "A stable planning checkpoint exists before issue publication.",
+        "Exactly one implementation issue is created for the NORMAL spec.",
+        "The issue points to the spec and does not copy the entire spec body.",
+        "Workflow state stores tracker/issue ref and status PLANNED.",
+        "No implementation is started."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "A LARGE workflow has a READY parent spec, three sharp child specs, one fog item, and delivery disposition ISSUES. Publish the plan to a tracker with native parent/child and dependency support.",
+      "expected_output": "IDD creates one parent/index issue plus one issue per sharp child, wires dependencies, leaves fog un-ticketed, and parks the workflow.",
+      "expectations": [
+        "The parent issue acts as an index rather than duplicating the parent spec.",
+        "Each sharp child spec gets exactly one thin issue.",
+        "Native parent-child and dependency relationships are used when available.",
+        "Fog does not become an issue prematurely.",
+        "Workflow status becomes PLANNED and no child implementation begins."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Run idd continue on a PLANNED ISSUES workflow with no active issue. Two child issues are currently executable.",
+      "expected_output": "IDD does not choose or implement either backlog issue. It reports the parked state and tells the user to start an issue explicitly.",
+      "expectations": [
+        "continue does not claim or implement a backlog issue.",
+        "The executable issue refs are surfaced for the user.",
+        "The next action uses idd start <issue ref/url>, not idd continue to start backlog work.",
+        "Workflow remains PLANNED."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Run idd start #123. Issue #123 was created by IDD for child 03 and contains workflow/spec markers. Its dependencies are DONE and its workflow is PLANNED.",
+      "expected_output": "IDD resolves the existing workflow and child spec, claims the issue, begins delivery without asking EXECUTE vs ISSUES again, and uses continue only at later isolation boundaries.",
+      "expectations": [
+        "The issue marker resolves the exact workflow and spec.",
+        "Dependencies are checked before implementation.",
+        "The issue is claimed/assigned when tracker capability and identity allow it.",
+        "No delivery-disposition question is asked because starting the issue explicitly means execute it.",
+        "The same issue remains active through corrective review loops.",
+        "On APPROVE the issue is completed/closed when permitted and the LARGE workflow returns to PLANNED rather than auto-starting another issue."
       ]
     }
   ]

@@ -1,7 +1,7 @@
 interface:
   display_name: "IDD"
-  short_description: "Stateful spec-driven software delivery workflow"
-  default_prompt: "Use IDD start for a new software change, or IDD continue to resume the active workflow."
+  short_description: "Stateful software planning and delivery workflow"
+  default_prompt: "Use IDD start for a new idea, READY spec, or issue; use IDD continue to resume active execution. IDD can either execute approved work now or publish it as issues and park."
 
 policy:
   allow_implicit_invocation: false

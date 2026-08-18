@@ -17,4 +17,4 @@ The upstream repository is distributed under the MIT License. The complete upstr
 licenses/MATT_POCOCK_SKILLS_MIT.txt
 ```
 
-IDD substantially adapts these ideas into a self-contained software-delivery workflow: repository-grounded specs, local Git candidate checkpoints, resumable workflow metadata, bounded implementation/review lineages, optional subagent execution, and host-neutral command routing.
+IDD substantially adapts these ideas into a self-contained software-delivery workflow: repository-grounded specs, local Git candidate checkpoints, resumable workflow metadata, bounded implementation/review lineages, optional subagent execution, and host-neutral command routing, resumable delivery disposition, and issue-backed planning.

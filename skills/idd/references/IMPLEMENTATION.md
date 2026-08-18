@@ -2,7 +2,7 @@
 
 The approved spec is the behavioral contract. The repository is the technical reality. Implementation must satisfy both without silently changing either.
 
-In IDD 4 managed workflows, implementation produces a **stable local candidate commit** for exactly one reviewable unit.
+In IDD 4.x managed workflows, implementation produces a **stable local candidate commit** for exactly one reviewable unit.
 
 ## Entry gate
 
@@ -26,6 +26,8 @@ Stop on a material blocker:
 - LARGE child ownership/candidate isolation cannot be proven.
 
 A valid explicit `implement` invocation or managed `continue` entering implementation authorizes the bounded implementation. Do not ask whether to begin when no blocker exists.
+
+In an ISSUES workflow, implementation is allowed only for the issue explicitly started/claimed by `idd start <issue>`; a parked backlog is not authorization to pick another issue.
 
 ## Managed child claim
 
